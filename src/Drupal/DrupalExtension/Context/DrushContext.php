@@ -17,13 +17,6 @@ class DrushContext extends RawDrupalContext implements TranslatableContext {
   protected $drushOutput;
 
   /**
-   * {@inheritDoc}
-   */
-  public static function getTranslationResources() {
-    return glob(__DIR__ . '/../../../../i18n/*.xliff');
-  }
-
-  /**
    * Return the most recent drush command output.
    *
    * @return string
