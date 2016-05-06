@@ -10,8 +10,18 @@ namespace Drupal\DrupalExtension\Context\Cache;
  *  with indexing.
  */
 class RoleCache extends CacheBase {
-  protected $primary_key = 'rid';
-
+  /**
+   * {@InheritDoc}.
+   *
+   * WARNING: leverages the D7 api to directly retrieve a result.  This
+   * eventually needs to be rewritten to use drivers.
+   */
+  public function get($key) {
+    if (!property_exists($this->cache, $key)) {
+      throw new \Exception(sprintf("%s::%s: No result found for alias %s", __CLASS__, __FUNCTION__, $key));
+    }
+    return user_role_load($key);
+  }
   /**
    * {@InheritDoc}
    */

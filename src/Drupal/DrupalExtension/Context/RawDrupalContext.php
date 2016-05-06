@@ -190,7 +190,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       $settings    = $environment->getSuite()->getSettings();
       foreach ($settings['contexts'] as $context_name) {
         $context = $environment->getContext($context_name);
-        self::$contexts->add($context, array('key' => $context_name));
+        self::$contexts->add($context_name, $context);
       }
       self::$scenario_static_initialized = TRUE;
     }
@@ -224,14 +224,14 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *         This function is called primarily by the create[X] methods found in RawDrupalContext.
    */
   public function convertAliasValues(&$value_object) {
-    if (!is_object($value_object)) {
-      throw new \Exception(sprintf('%s: Invalid argument for function: %s', get_class($this), __FUNCTION__));
-    }
     // Translate dynamic values if present.
+    //
     foreach ($value_object as $field_name => $prospective_alias) {
       if (!is_string($prospective_alias)) {
+        //we currently don't allow aliases to exist deeper than the first level.
         continue;
       }
+      //print sprintf("%s::%s: Prospective alias: %s\n", get_class($this), __FUNCTION__, $prospective_alias);
       if (preg_match('|^' . ExtensionCache\AliasCache::ALIAS_VALUE_PREFIX . '|', $prospective_alias)) {
         // This should map to a value in the alias cache.
         $confirmed_alias_with_field = str_replace(ExtensionCache\AliasCache::ALIAS_VALUE_PREFIX, '', $prospective_alias);
@@ -247,7 +247,17 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
         if (!property_exists($o, $referenced_field_name)) {
           throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($o, TRUE)));
         }
-        $value_object->$field_name = $o->$referenced_field_name;
+        //print sprintf("%s::%s: Retrieved value: %s\n", get_class($this), __FUNCTION__, $o->$referenced_field_name);
+        if (is_object($value_object)) {
+          $value_object->$field_name = $o->$referenced_field_name;
+        }
+        elseif (is_array($value_object)) {
+          $value_object[$field_name] = $o->$referenced_field_name;
+        }
+        else {
+          throw new \Exception(sprintf('%s::%s: Invalid argument type for function: %s', get_class($this), __FUNCTION__, gettype($value_object)));
+        }
+
       }
     }
   }
@@ -271,9 +281,14 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * @return The newly created drupal node
    */
   protected function _createNode($values = array()) {
-    $cached = self::$nodes->find($values);
-    if (!empty($cached)) {
-      return $cached;
+    if(isset($values['nid'])){
+      try{
+        $node = self::$nodes->get($values['nid']);
+        return $node;
+      } catch(\Exception $e){
+        //TODO: do nothing?  This node exists in the db, but not in cache.  This
+        //seems like it should be rethrown.
+      }
     }
 
     // Create a serializable index from the unique values.
@@ -300,21 +315,35 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * @return $user         The newly created user.
    */
   protected function _createUser($values = array()) {
-    $cached = self::$users->find($values);
-    if (!empty($cached)) {
-      print sprintf("%s::%s: Cached user found for value array %s", get_class($this), __FUNCTION__, print_r($cached, TRUE));
-      return $cached;
+    if(isset($values['uid'])){
+      try{
+        $user = self::$users->get($values['uid']);
+        return $user;
+      } catch(\Exception $e){
+        //TODO: do nothing?  This node exists in the db, but not in cache.  This
+        //seems like it should be rethrown.
+      }
     }
     if (is_string($values['roles'])) {
       throw new \Exception(sprintf("%s::%s: Invalid argument for roles: %s.  Should be an array.", get_class($this), __FUNCTION__, $values['roles']));
     }
     // Assign defaults where possible.
     $values = $values + array(
-        'name' => $this->getDriver()->getRandom()->name(8),
-        'pass' => $this->getDriver()->getRandom()->name(16),
-        'roles' => array()
-      );
-    $values['mail'] = "$values[name]@example.com";
+      'name' => $this->getDriver()->getRandom()->name(8),
+      'pass' => $this->getDriver()->getRandom()->name(16),
+      'roles' => array(),
+      'email' => "%%%name%%%@example.com"
+    );
+    // Replace dependent values.
+    foreach ($values as $k => $v) {
+      if (!is_string($v)) {
+        continue;
+      }
+      if (preg_match("/%%%([^%]+)%%%/", $v, $matches)) {
+        $v = preg_replace("/%%%([^%]+)%%%/", $values[$matches[1]], $v);
+        $values[$k] = $v;
+      }
+    }
     $values = (object) $values;
     $saved = $this->userCreate($values);
     foreach ($values->roles as $role) {
@@ -588,9 +617,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     $this->parseEntityFields('user', $user);
     $this->getDriver()->userCreate($user);
     $this->dispatchHooks('AfterUserCreateScope', $user);
-    $user_primary_key = self::$users->add($user);
+    self::$users->add($user->uid);
     if (!is_null($named_alias)) {
-      $this->addAlias($named_alias, $user_primary_key, 'users');
+      $this->addAlias($named_alias, $user->uid, 'users');
     }
     return $user;
   }
@@ -602,15 +631,18 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *   The created node.
    */
   public function nodeCreate($node) {
+    if(is_array($node)){
+      $node = (object) $node;
+    }
     $named_alias = ExtensionCache\AliasCache::extractAliasKey($node);
     $this->convertAliasValues($node);
     $this->dispatchHooks('BeforeNodeCreateScope', $node);
     $this->parseEntityFields('node', $node);
     $saved = $this->getDriver()->createNode($node);
     $this->dispatchHooks('AfterNodeCreateScope', $saved);
-    $node_primary_key = self::$nodes->add($saved);
+    self::$nodes->add($saved->nid);
     if (!is_null($named_alias)) {
-      $this->addAlias($named_alias, $node_primary_key, 'nodes');
+      $this->addAlias($named_alias, $saved->nid, 'nodes');
     }
     return $saved;
   }
@@ -630,7 +662,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     $this->parseEntityFields('taxonomy_term', $term);
     $saved = $this->getDriver()->createTerm($term);
     $this->dispatchHooks('AfterTermCreateScope', $saved);
-    $term_primary_key = self::$terms->add($term);
+    $term_primary_key = self::$terms->add($term->tid);
     return $saved;
   }
   /**
@@ -652,7 +684,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     $role = new \stdClass();
     $role->rid = $role_name;
     $role->permissions = $permissions;
-    $role_primary_key = self::$roles->add($role);
+    $role_primary_key = self::$roles->add($role->rid);
     return $role_name;
   }
   /**
@@ -674,7 +706,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     $language = $this->getDriver()->languageCreate($language);
     if ($language) {
       $this->dispatchHooks('AfterLanguageCreateScope', $language);
-      self::$languages->add($language->langcode, $language);
+      self::$languages->add($language->langcode);
     }
     return $language;
   }
@@ -759,7 +791,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       throw new \Exception(sprintf("%s::%s: No cache exists by the name of %s", get_class($this), __FUNCTION__, $cache_name));
     }
     // TODO: add a step to check if the aliased item exists before setting up the alias.
-    self::$aliases->add($value, array('key' => $alias, 'cache' => $cache_name));
+    self::$aliases->add($alias, array('value' => $value, 'cache' => $cache_name));
   }
   /**
    * Removes the named alias if it exists.
