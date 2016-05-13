@@ -246,7 +246,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
           throw new \Exception(sprintf('%s::%s: Attempt was made to dynamically reference the property of an item that was not yet created.', get_class($this), __FUNCTION__));
         }
         if (!property_exists($o, $referenced_field_name)) {
-          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($o, TRUE)));
+          $property_list = array_keys(get_object_vars($o));
+          sort($property_list);
+          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
         }
         $value_object->$field_name = $o->$referenced_field_name;
       }
@@ -316,7 +318,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     $values['mail'] = "$values[name]@example.com";
     $values = (object) $values;
     $user = $this->userCreate($values);
-    foreach ($user->roles) as $role) {
+    foreach ($user->roles as $role) {
       if (!in_array(strtolower($role), array('authenticated', 'authenticated user'))) {
         // Only add roles other than 'authenticated user'.
         $this->getDriver()->userAddRole($user, $role);
