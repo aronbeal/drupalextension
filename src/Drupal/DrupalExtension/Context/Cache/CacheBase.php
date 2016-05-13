@@ -11,9 +11,9 @@ namespace Drupal\DrupalExtension\Context\Cache;
  *  is up to the subclass to fill in the blanks.
  */
 abstract class CacheBase implements CacheInterface {
-  //primary key by which content is indexed.  SHould be a field value.
-  //One can also set by an arbitrary index value.  See the add method for
-  //more information.
+  // Primary key by which content is indexed.  SHould be a field value.
+  // One can also set by an arbitrary index value.  See the add method for
+  // more information.
   protected $primary_key = NULL;
   // Stores actual copies of cached items.  Using stdclass to allow
   // "string" integer keys.
@@ -24,36 +24,36 @@ abstract class CacheBase implements CacheInterface {
   // needs to be used for indexing purposes.  In the case of the latter,
   // it is up to the caller to ensure uniqueness of the key, and to only add
   // with the 'key' option for any entries of that type.
-  //protected $hash = new \stdClass();
+  // protected $hash = new \stdClass();
   // A map with serialized field values as keys, and cache indices as values.
   // (more than one of a given serialized field value is possible).  This
   // is structured as:
   //  $indices (stdClass) -> [index name (stdClass))] -> [index key (array)] ->
-  //    [values (string indices)]
+  //    [values (string indices)].
   protected $indices = NULL;
   /**
    * Constructor.
    */
   public function __construct() {
-    //print "Constructing ".get_class($this) ."\n";
-    $this->cache = new \stdClass;
-    $this->indices = new \stdClass;
-    if(!is_null($this->primary_key)){
+    // Print "Constructing ".get_class($this) ."\n";.
+    $this->cache = new \stdClass();
+    $this->indices = new \stdClass();
+    if (!is_null($this->primary_key)) {
       $this->addIndices($this->primary_key);
     }
     $this->resetCache();
   }
   /**
-   *  Can only be called internally by the clean method, as that method does
+   * Can only be called internally by the clean method, as that method does
    * db cleanup as a side-effect before calling, which would otherwise not
    * be accomplished.
+   *
    * @return NULL
    */
   protected function resetCache() {
     $this->cache = new \stdClass();
-    //$this->hash = new \stdClass();
+    // $this->hash = new \stdClass();
     foreach ($this->getNamedIndices() as $k) {
-      //print "Creating named index: $k\n";
       $this->indices->{$k} = new \stdClass();
     }
   }
@@ -64,7 +64,8 @@ abstract class CacheBase implements CacheInterface {
     return ((is_null($this->primary_key)) ? array() : array($this->primary_key)) + array_keys(get_object_vars($this->indices));
   }
   /**
-   * Provides a list of the keys assigned to objects in this cache
+   * Provides a list of the keys assigned to objects in this cache.
+   *
    * @return array an array of string keys.
    */
   protected function getCacheIndicies() {
@@ -78,7 +79,7 @@ abstract class CacheBase implements CacheInterface {
     if (empty($named_indices)) {
       throw new \Exception("No arguments passed to addIndices function for " . get_class($this));
     }
-    //print "Adding index " . implode(',', $named_indices) . " to ".get_class($this)."\n";
+    // Print "Adding index " . implode(',', $named_indices) . " to ".get_class($this)."\n";
     foreach ($named_indices as $named_index) {
       if (!property_exists($this->indices, $named_index)) {
         $this->indices->{$named_index} = new \stdClass();
@@ -89,27 +90,29 @@ abstract class CacheBase implements CacheInterface {
   /**
    * {@InheritDoc}.
    */
-  public function add($item, $options=array()) {
-    if(empty($item)){
+  public function add($item, $options = array()) {
+    if (empty($item)) {
       var_dump(debug_backtrace());
-      throw new \Exception("Cannot add an empty item to ".get_class($this));
+      throw new \Exception("Cannot add an empty item to " . get_class($this));
     }
-    try{
+    try {
       $primary_key = (!is_null($this->primary_key) && is_object($item)) ? $item->{$this->primary_key} : NULL;
-    } catch(\Exception $e){
+
+    }
+    catch (\Exception $e) {
       throw new \Exception(sprintf("%s::%s: %s, item: %s:", get_class($this), __FUNCTION__, $e->getMessage(), json_encode($item)));
     }
     $options = $options + array(
-      'key'=>$primary_key
+      'key' => $primary_key
     );
-    if(empty($options['key'])){
-      //in cases where there is no primary key, and no value was passed for
-      //'key' in options
+    if (empty($options['key'])) {
+      // In cases where there is no primary key, and no value was passed for
+      // 'key' in options.
       throw new \Exception("Couldn't establish primary key!  Value couldn't be added to cache. Cache state: " . $this);
     }
     $options['key'] = strval($options['key']);
-    if (property_exists($this->cache,$options['key'])) {
-      throw new \Exception("An item with the index $options[key] already exists in this cache (".get_class($this).'): '.print_r($this->get($options['key']), TRUE));
+    if (property_exists($this->cache, $options['key'])) {
+      throw new \Exception("An item with the index $options[key] already exists in this cache (" . get_class($this) . '): ' . print_r($this->get($options['key']), TRUE));
     }
     $this->cache->{$options['key']} = $item;
     // Look for any established extra indices, and index this content
@@ -126,32 +129,32 @@ abstract class CacheBase implements CacheInterface {
         // cached item where a field is the only thing determining uniqueness.
         // This should not be true for a serialization of the entire values
         // array - those entries should be unique.
-        $this->indices->{$k}->{$serialized_field_values} []= $options['key'];
+        $this->indices->{$k}->{$serialized_field_values}[] = $options['key'];
       }
     }
-    //return the primary key index of the stored cache item.
+    // Return the primary key index of the stored cache item.
     return $options['key'];
   }
   /**
-   * {@InheritDoc}
+   * {@InheritDoc}.
    */
-  public function count(){
+  public function count() {
     return count($this->getCacheIndicies());
   }
   /**
    * {@InheritDoc}.
    */
   public function get($key) {
-    if (property_exists($this->cache,$key)) {
+    if (property_exists($this->cache, $key)) {
       return $this->cache->{$key};
     }
     return NULL;
   }
   /**
-   * {@InheritDoc}
+   * {@InheritDoc}.
    */
-  public function remove($key){
-    throw new \Exception(get_class($this).'::'.": does not implement the ".__FUNCTION__." method.");
+  public function remove($key) {
+    throw new \Exception(get_class($this) . '::' . ": does not implement the " . __FUNCTION__ . " method.");
   }
   /**
    * Returns the item found at the named index.
@@ -169,10 +172,10 @@ abstract class CacheBase implements CacheInterface {
    *          before runtime).
    */
   public function getIndex($index_name, $index_key) {
-    if(!property_exists($this->indices, $index_name)){
+    if (!property_exists($this->indices, $index_name)) {
       throw new \Exception("Cache $index_name does not exist! Cache state: " . $this);
     }
-    if(!property_exists($this->indices->{$index_name}, $index_key)){
+    if (!property_exists($this->indices->{$index_name}, $index_key)) {
       return array();
     }
     return $this->indices->{$index_name}->{$index_key};
@@ -200,36 +203,38 @@ abstract class CacheBase implements CacheInterface {
     // //of all these results to get a final set
     // $results = array_reduce($results_indexed, function($carry, $arr){
     //   return array_intersect($carry, $arr);
-    // }, $results_indexed[0]);
+    // }, $results_indexed[0]);.
     $results = array();
-    //TODO: jeez, can we do better than n^3 here?
-    foreach($this->cache as $key=>$o){
-      foreach($o as $field_name=>$field_value){
-        foreach($values as $k=>$v){
-          if(property_exists($o, $k)){
+    // TODO: jeez, can we do better than n^3 here?
+    foreach ($this->cache as $key => $o) {
+      foreach ($o as $field_name => $field_value) {
+        foreach ($values as $k => $v) {
+          if (property_exists($o, $k)) {
             $tmp_value = serialize($field_value);
-            if($v != $field_value && $v !== $tmp_value){
-              //print "Nomatch.  Tomatch: $v, Regular: $field_value, Serialized: $tmp_value\n";
+            if ($v != $field_value && $v !== $tmp_value) {
+              // Print "Nomatch.  Tomatch: $v, Regular: $field_value, Serialized: $tmp_value\n";.
               break 2;
             }
           }
         }
-        $results []= $o;
+        $results[] = $o;
       }
     }
     return $results;
   }
   /**
    * Magic method to display cache contents as a CLI-formatted string.
+   *
    * @return string [description]
    */
-  public function __toString(){
+  public function __toString() {
     $result = "\n**************************";
     $result .= "\n " . get_class($this);
-    $result .= "\n**************************\nCache entry count: ".$this->count();
-    $result .= "\nKeys: ".implode(', ', $this->getCacheIndicies());
-    $result .= "\nIndices: ".implode(', ', $this->getNamedIndices());
+    $result .= "\n**************************\nCache entry count: " . $this->count();
+    $result .= "\nKeys: " . implode(', ', $this->getCacheIndicies());
+    $result .= "\nIndices: " . implode(', ', $this->getNamedIndices());
     $result .= "\n**************************\n";
     return $result;
   }
+
 }
