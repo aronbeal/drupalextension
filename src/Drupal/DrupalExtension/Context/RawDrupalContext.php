@@ -306,22 +306,20 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       //print sprintf("%s::%s: Cached user found for value array %s", get_class($this), __FUNCTION__, print_r($cached, TRUE));
       return $cached;
     }
-    if (is_string($values['roles'])) {
-      throw new \Exception(sprintf("%s::%s: Invalid argument for roles: %s.  Should be an array.", get_class($this), __FUNCTION__, $values['roles']));
-    }
+
     // Assign defaults where possible.
     $values = $values + array(
         'name' => $this->getDriver()->getRandom()->name(8),
         'pass' => $this->getDriver()->getRandom()->name(16),
-        'roles' => array()
+        'roles' => ''
       );
     $values['mail'] = "$values[name]@example.com";
     $values = (object) $values;
-    $saved = $this->userCreate($values);
-    foreach ($values->roles as $role) {
+    $user = $this->userCreate($values);
+    foreach ($user->roles) as $role) {
       if (!in_array(strtolower($role), array('authenticated', 'authenticated user'))) {
         // Only add roles other than 'authenticated user'.
-        $this->getDriver()->userAddRole($saved, $role);
+        $this->getDriver()->userAddRole($user, $role);
       }
     }
     return $saved;
