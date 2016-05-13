@@ -9,6 +9,7 @@ namespace Drupal\DrupalExtension\Context;
 use Behat\MinkExtension\Context\RawMinkContext;
 use Behat\Mink\Exception\DriverException;
 use Behat\Testwork\Hook\HookDispatcher;
+use Behat\Mink\Element\Element;
 
 use Drupal\DrupalDriverManager;
 
@@ -245,7 +246,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
           throw new \Exception(sprintf('%s::%s: Attempt was made to dynamically reference the property of an item that was not yet created.', get_class($this), __FUNCTION__));
         }
         if (!property_exists($o, $referenced_field_name)) {
-          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($o, TRUE)));
+          $property_list = array_keys(get_object_vars($o));
+          sort($property_list);
+          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
         }
         //print sprintf("%s::%s: Retrieved value: %s\n", get_class($this), __FUNCTION__, $o->$referenced_field_name);
         if (is_object($value_object)) {
@@ -315,41 +318,25 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * @return $user         The newly created user.
    */
   protected function _createUser($values = array()) {
-    if(isset($values['uid'])){
-      try{
-        $user = self::$users->get($values['uid']);
-        return $user;
-      } catch(\Exception $e){
-        //TODO: do nothing?  This node exists in the db, but not in cache.  This
-        //seems like it should be rethrown.
-      }
+    $cached = self::$users->find($values);
+    if (!empty($cached)) {
+      print sprintf("%s::%s: Cached user found for value array %s", get_class($this), __FUNCTION__, print_r($cached, TRUE));
+      return $cached;
     }
-    if (is_string($values['roles'])) {
-      throw new \Exception(sprintf("%s::%s: Invalid argument for roles: %s.  Should be an array.", get_class($this), __FUNCTION__, $values['roles']));
-    }
+
     // Assign defaults where possible.
     $values = $values + array(
-      'name' => $this->getDriver()->getRandom()->name(8),
-      'pass' => $this->getDriver()->getRandom()->name(16),
-      'roles' => array(),
-      'email' => "%%%name%%%@example.com"
-    );
-    // Replace dependent values.
-    foreach ($values as $k => $v) {
-      if (!is_string($v)) {
-        continue;
-      }
-      if (preg_match("/%%%([^%]+)%%%/", $v, $matches)) {
-        $v = preg_replace("/%%%([^%]+)%%%/", $values[$matches[1]], $v);
-        $values[$k] = $v;
-      }
-    }
+        'name' => $this->getDriver()->getRandom()->name(8),
+        'pass' => $this->getDriver()->getRandom()->name(16),
+        'roles' => array()
+      );
+    $values['mail'] = "$values[name]@example.com";
     $values = (object) $values;
-    $saved = $this->userCreate($values);
-    foreach ($values->roles as $role) {
+    $user = $this->userCreate($values);
+    foreach ($user->roles as $role) {
       if (!in_array(strtolower($role), array('authenticated', 'authenticated user'))) {
         // Only add roles other than 'authenticated user'.
-        $this->getDriver()->userAddRole($saved, $role);
+        $this->getDriver()->userAddRole($user, $role);
       }
     }
     return $saved;
@@ -975,7 +962,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *
    * @throws \Exception
    */
-  public function getTableRow(Element $element, $search) {
+  public function getTableRow($element, $search) {
     $rows = $element->findAll('css', 'tr');
     if (empty($rows)) {
       throw new \Exception(sprintf('%s::%s: No rows found on the page %s', get_class($this), __FUNCTION__, $this->getSession()->getCurrentUrl()));

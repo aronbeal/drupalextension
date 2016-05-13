@@ -28,7 +28,9 @@ class AliasCache extends CacheBase {
    *         present.
    */
   public static function extractAliasKey(&$o) {
-
+    if(!is_object($o)){
+      throw new \Exception(sprintf("%s::%s: Wrong argument type (%s) passed.", __CLASS__, __FUNCTION__, gettype($o)));
+    }
     $alias = NULL;
     if (is_object($o)) {
       if (property_exists($o, self::ALIAS_KEY_PREFIX)) {

@@ -11,6 +11,10 @@ namespace Drupal\DrupalExtension\Context\Cache;
  *  is up to the subclass to fill in the blanks.
  */
 abstract class CacheBase implements CacheInterface {
+  // Primary key by which content is indexed.  SHould be a field value.
+  // One can also set by an arbitrary index value.  See the add method for
+  // more information.
+  protected $primary_key = NULL;
   // Stores actual copies of cached items.  Using stdclass to allow
   // "string" integer keys.
   protected $cache = NULL;
@@ -34,6 +38,9 @@ abstract class CacheBase implements CacheInterface {
     // Print "Constructing ".get_class($this) ."\n";.
     $this->cache = new \stdClass();
     $this->indices = new \stdClass();
+    if(!is_null($this->primary_key)){
+      $this->addIndices($this->primary_key);
+    }
     $this->resetCache();
   }
   /**
@@ -47,7 +54,7 @@ abstract class CacheBase implements CacheInterface {
     $this->cache = new \stdClass();
     // $this->hash = new \stdClass();
     foreach ($this->getNamedIndices() as $k) {
-      // Print "Creating named index: $k\n";.
+      //print "Creating named index: $k\n";
       $this->indices->{$k} = new \stdClass();
     }
   }
