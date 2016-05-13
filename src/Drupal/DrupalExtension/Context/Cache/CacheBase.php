@@ -94,7 +94,11 @@ abstract class CacheBase implements CacheInterface {
       var_dump(debug_backtrace());
       throw new \Exception("Cannot add an empty item to ".get_class($this));
     }
-    $primary_key = (!is_null($this->primary_key) && is_object($item)) ? $item->{$this->primary_key} : NULL;
+    try{
+      $primary_key = (!is_null($this->primary_key) && is_object($item)) ? $item->{$this->primary_key} : NULL;
+    } catch(\Exception $e){
+      throw new \Exception(sprintf("%s::%s: %s, item: %s:", get_class($this), __FUNCTION__, $e->getMessage(), json_encode($item));
+    }
     $options = $options + array(
       'key'=>$primary_key
     );
