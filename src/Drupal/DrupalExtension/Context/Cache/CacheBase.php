@@ -97,7 +97,7 @@ abstract class CacheBase implements CacheInterface {
     try{
       $primary_key = (!is_null($this->primary_key) && is_object($item)) ? $item->{$this->primary_key} : NULL;
     } catch(\Exception $e){
-      throw new \Exception(sprintf("%s::%s: %s, item: %s:", get_class($this), __FUNCTION__, $e->getMessage(), json_encode($item));
+      throw new \Exception(sprintf("%s::%s: %s, item: %s:", get_class($this), __FUNCTION__, $e->getMessage(), json_encode($item)));
     }
     $options = $options + array(
       'key'=>$primary_key
