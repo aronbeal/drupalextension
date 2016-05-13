@@ -49,11 +49,6 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @Given I am logged in as a/an :role
    */
   public function assertAuthenticatedByRole($roles) {
-
-    if (is_string($roles)) {
-      $roles = array_map("trim", explode(",", $roles));
-    }
-
     if ($this->loggedInWithRoles($roles)) {
       return TRUE;
     }
@@ -67,17 +62,11 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * | field_user_surname  | Smith |
    * | ...                 | ...   |.
    *
-   * @Given I am logged in as a user with the :role role(s) and I have the following fields:
+   * @Given I am logged in as a user with the :roles role(s) and I have the following fields:
    */
-  public function assertAuthenticatedByRoleWithGivenFields($role, TableNode $fields) {
+  public function assertAuthenticatedByRoleWithGivenFields($roles, TableNode $fields) {
     // Check if a user with this role is already logged in.
-    if (!$this->loggedInWithRole($role)) {
-      // Create user (and project).
-      $roles  = explode(',', $role);
-      $roles  = array_map('trim', $roles);
-      $values = array(
-        'roles' => $roles,
-      );
+    if (!$this->loggedInWithRoles($roles)) {
       foreach ($fields->getRowsHash() as $field => $value) {
         $values[$field] = $value;
       }
