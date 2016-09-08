@@ -621,6 +621,33 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
   }
 
   /**
+   * Resolves an alias/field combination to a cached object value.
+   *
+   * Returns the value of a field on an aliased object.  See resolveAlias
+   * for more info.
+   *
+   * @param string $aliasfield
+   *   The alias/field combination to resolve. If you create a node, for
+   *   example, with the values:
+   *   | field_foo | Some value |
+   *   | @         | test_user  |
+   *   Then a valid combination would be '@test_user/field_foo'
+   *
+   * @return mixed
+   *    Returns whatever the field value is.
+   */
+  public function resolveAliasValue($aliasfield) {
+    @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
+    if (empty($alias)) {
+      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+    }
+    if (empty($field)) {
+      throw new \Exception(sprintf("%s::%s line %s: No alias field was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+    }
+    return self::$aliases->getValue($alias, $field, $this);
+  }
+
+  /**
    * Create a user.
    *
    * @return object

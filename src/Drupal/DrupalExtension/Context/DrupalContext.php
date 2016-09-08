@@ -579,37 +579,6 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   }
 
   /**
-   * Retrieves the aliased value.
-   *
-   * Retrieves the provided aliased object, and the value of the specified
-   * field for that object.
-   *
-   * @param string $aliasfield
-   *   An alias/field combination to display.  Entry
-   *   must be of the form alias_name + '/' + field_name, e.g.:
-   *   'test_user/uid'.
-   */
-  public function getAliasValue($aliasfield, $debug = FALSE) {
-    // TODO: revisit this regex to ensure this can match any alias/field name
-    // combination.
-    @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
-    if (empty($alias)) {
-      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
-    }
-    if (empty($field)) {
-      return $this->whenIDebugTheObjectNamed($alias, NULL);
-    }
-    $object = $this->resolveAlias($alias);
-    $field_value = $object->{$field};
-    $str_field_value = (is_scalar($field_value)) ? $field_value : print_r($field_value, TRUE);
-    $str_field_value = implode("\n\t", explode("\n", $str_field_value));
-    if ($debug) {
-      print sprintf("\n<%s>\n\tField: %s, Value: \n\t%s\n</%s>\n", $alias, $field, $str_field_value, $alias);
-    }
-    return $field_value;
-  }
-
-  /**
    * Prints the aliased value to the console.
    *
    * Retrieves the provided aliased object, and prints the value of the
@@ -623,7 +592,15 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @Given I debug the alias( value) :alias
    */
   public function debugAliasValue($aliasfield) {
-    $this->getAliasValue($aliasfield, TRUE);
+    // TODO: revisit this regex to ensure this can match any alias/field name
+    // combination.
+    $field_value = $this->resolveAliasValue($aliasfield);
+    if ($debug) {
+      $str_field_value = (is_scalar($field_value)) ? $field_value : print_r($field_value, TRUE);
+      $str_field_value = implode("\n\t", explode("\n", $str_field_value));
+      print sprintf("\n<%s>\n\tField: %s, Value: \n\t%s\n</%s>\n", $alias, $field, $str_field_value, $alias);
+    }
+    return $field_value;
   }
 
   /**

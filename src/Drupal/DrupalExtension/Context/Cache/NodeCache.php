@@ -29,6 +29,18 @@ class NodeCache extends CacheBase {
   }
 
   /**
+   * Returns the value for a field from a given alias.
+   */
+  public function getValue($key, $field, Context &$context) {
+    $object = $this->get($key, $context);
+    if (!property_exists($object, $field)) {
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
+    }
+    $w = entity_metadata_wrapper('node', $object);
+    return $w->{$field}->value();
+  }
+
+  /**
    *
    */
   private function doBreak() {
@@ -45,7 +57,7 @@ class NodeCache extends CacheBase {
       return TRUE;
     }
     $nids = array_keys(get_object_vars($this->cache));
-    foreach($nids as $nid){
+    foreach ($nids as $nid) {
       $node = new \stdClass();
       $node->nid = $nid;
       $context->getDriver()->nodeDelete($node);

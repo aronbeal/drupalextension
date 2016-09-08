@@ -73,6 +73,17 @@ abstract class ReferentialCache extends CacheBase {
   }
 
   /**
+   * Returns the value for a field from a given alias.
+   */
+  public function getValue($key, $field, Context &$context) {
+    $o = parent::get($key, $context);
+    if (!property_exists($this->cache_references, $o->cache)) {
+      throw new \Exception(sprintf("%s::%s: The cache '%s' is not referrable", __CLASS__, __FUNCTION__, $o->cache));
+    }
+    return $this->cache_references->{$o->cache}->getValue($o->value, $field, $context);
+  }
+
+  /**
    * {@InheritDoc}.
    */
   public function remove($key, Context &$context) {

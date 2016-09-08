@@ -114,26 +114,26 @@ abstract class CacheBase implements CacheInterface {
       // Do nothing - we *want* there to be no entry.
     }
     $this->cache->{$index} = $value;
-    if(is_scalar($value)){
+    if (is_scalar($value)) {
       return $index;
     }
-    //if the value is not scalar, it becomes possible to store references by
-    //named index.
+    // If the value is not scalar, it becomes possible to store references by
+    // named index.
     foreach ($this->getNamedIndices() as $index_name) {
-      if(!isset($value->{$index_name})){
-        //the value doesn't contain any entries that match any known indices
+      if (!isset($value->{$index_name})) {
+        // The value doesn't contain any entries that match any known indices.
         continue;
       }
       $index_value = $value->{$index_name};
-      if(!is_scalar($index_value)){
-        //Can't perform an index lookup on a non-scalar value.
+      if (!is_scalar($index_value)) {
+        // Can't perform an index lookup on a non-scalar value.
         continue;
       }
-      // print sprintf("%s::%s line %s: Adding %s->%s index with value %s\n", get_class($this), __FUNCTION__, __LINE__, $index_name, $index_value, $index);
-      if(!isset($this->indices->{$index_name}->{$index_value})){
+      // Print sprintf("%s::%s line %s: Adding %s->%s index with value %s\n", get_class($this), __FUNCTION__, __LINE__, $index_name, $index_value, $index);.
+      if (!isset($this->indices->{$index_name}->{$index_value})) {
         $this->indices->{$index_name}->{$index_value} = array();
       }
-      $this->indices->{$index_name}->{$index_value} []= $index;
+      $this->indices->{$index_name}->{$index_value}[] = $index;
     }
     return $index;
   }
@@ -226,6 +226,18 @@ abstract class CacheBase implements CacheInterface {
   }
 
   /**
+   * Returns the value for a field from a given alias.
+   */
+  public function getValue($key, $field, Context &$context) {
+    $object = $this->get($key, $context);
+    if (!property_exists($object, $field)) {
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
+    }
+    $field_value = $object->{$field};
+    return $field_value;
+  }
+
+  /**
    * Magic method to display cache contents as a CLI-formatted string.
    *
    * @return string
@@ -240,9 +252,9 @@ abstract class CacheBase implements CacheInterface {
     $result .= "\n**************************\nCache entry count: " . $this->count();
     $result .= "\nKeys: " . implode(', ', $this->getCacheIndicies());
     $result .= "\nIndices: ";
-    foreach($this->getNamedIndices() as $index_name){
+    foreach ($this->getNamedIndices() as $index_name) {
       $result .= "\nIndex values stored in $index_name";
-      foreach($this->indices->{$index_name} as $index_value){
+      foreach ($this->indices->{$index_name} as $index_value) {
         $result .= "\n\t$index_value";
       }
     }
