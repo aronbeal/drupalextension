@@ -105,9 +105,9 @@ class AliasCache extends ReferentialCache {
         // level.
         continue;
       }
-      //aliases are of the form @:[alphanumeric]/[alphanumeric].  For instance,
-      //'@:test_user/uid' would provide the user id of the user aliased by
-      //'test_user' in a previous scenario step.
+      // Aliases are of the form @:[alphanumeric]/[alphanumeric].  For instance,
+      // '@:test_user/uid' would provide the user id of the user aliased by
+      // 'test_user' in a previous scenario step.
       if (!preg_match('|' . self::ALIAS_VALUE_PREFIX . '\w+/\w+|', $field_value)) {
         // No aliases anywhere in the field value.
         continue;
@@ -121,7 +121,7 @@ class AliasCache extends ReferentialCache {
           $resolved_field_values[$i] = $unresolved_field_values[$i];
           continue;
         }
-        //perfect match to our regex, so it is an alias.
+        // Perfect match to our regex, so it is an alias.
         $confirmed_alias = $unresolved_field_values[$i];
         // This should map to a value in the alias cache.
         $confirmed_alias_with_field = str_replace(self::ALIAS_VALUE_PREFIX, '', $confirmed_alias);

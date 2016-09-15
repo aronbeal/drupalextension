@@ -557,9 +557,9 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
         // CR.
         case 0:
           // Y.
-          case 121:
+        case 121:
           // Y.
-          case 89:
+        case 89:
           break 2;
 
         // Case 78: //N
@@ -567,11 +567,11 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
         // q.
         case 113:
           // Q.
-          case 81:
+        case 81:
           throw new \Exception("Exiting test intentionally.");
 
         default:
-            fwrite(STDOUT, sprintf("\nInvalid entry '%s'.  Please enter 'y', 'q', or the enter key.\n", $line));
+          fwrite(STDOUT, sprintf("\nInvalid entry '%s'.  Please enter 'y', 'q', or the enter key.\n", $line));
           break;
       }
     } while (TRUE);
@@ -589,18 +589,16 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *   must be of the form alias_name + '/' + field_name, e.g.:
    *   'test_user/uid'.
    *
-   * @Given I debug the alias( value) :alias
+   * @Given I debug the alias value :alias
    */
   public function debugAliasValue($aliasfield) {
     // TODO: revisit this regex to ensure this can match any alias/field name
     // combination.
     $field_value = $this->resolveAliasValue($aliasfield);
-    if ($debug) {
-      $str_field_value = (is_scalar($field_value)) ? $field_value : print_r($field_value, TRUE);
-      $str_field_value = implode("\n\t", explode("\n", $str_field_value));
-      print sprintf("\n<%s>\n\tField: %s, Value: \n\t%s\n</%s>\n", $alias, $field, $str_field_value, $alias);
-    }
-    return $field_value;
+    $str_field_value = (is_scalar($field_value)) ? $field_value : print_r($field_value, TRUE);
+    $str_field_value = implode("\n\t", explode("\n", $str_field_value));
+    print sprintf("%s: %s\n", $aliasfield, $str_field_value);
+    
   }
 
   /**

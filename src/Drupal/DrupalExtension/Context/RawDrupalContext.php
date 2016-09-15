@@ -328,21 +328,21 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    */
   public function setDrupal(DrupalDriverManager $drupal) {
     $this->drupal = $drupal;
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    */
   public function getDrupal() {
     return $this->drupal;
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    */
   public function setDispatcher(HookDispatcher $dispatcher) {
     $this->dispatcher = $dispatcher;
@@ -616,7 +616,12 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *    alias referred to a user object, like in the above example, this
    *    function would actually return that object, freshly loaded from the db.
    */
-  public function resolveAlias($alias) {
+  public function resolveAlias($aliasfield) {
+    // Ensure the alias does not have an attached field.
+    @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
+    if (empty($alias)) {
+      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+    }
     return self::$aliases->get($alias, $this);
   }
 
@@ -631,7 +636,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *   example, with the values:
    *   | field_foo | Some value |
    *   | @         | test_user  |
-   *   Then a valid combination would be '@test_user/field_foo'
+   *   Then a valid combination would be '@test_user/field_foo'.
    *
    * @return mixed
    *    Returns whatever the field value is.

@@ -93,7 +93,6 @@ abstract class CacheBase implements CacheInterface {
    * {@InheritDoc}.
    */
   public function add($index, $value = NULL) {
-
     if (empty($index)) {
       throw new \Exception(sprintf("%s::%s: Couldn't determine primary key! Value couldn't be added to cache - cannot safely continue.", get_class($this), __FUNCTION__));
     }
@@ -220,7 +219,7 @@ abstract class CacheBase implements CacheInterface {
   public function get($key, Context &$context) {
 
     if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $key));
+      throw new \Exception(sprintf("%s::%s: No result found for key %s.", get_class($this), __FUNCTION__, $key));
     }
     return $this->cache->{$key};
   }
@@ -231,7 +230,7 @@ abstract class CacheBase implements CacheInterface {
   public function getValue($key, $field, Context &$context) {
     $object = $this->get($key, $context);
     if (!property_exists($object, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", get_class($this), __FUNCTION__, __LINE__, $field));
     }
     $field_value = $object->{$field};
     return $field_value;

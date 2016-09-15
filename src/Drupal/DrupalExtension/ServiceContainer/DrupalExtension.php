@@ -45,20 +45,20 @@ class DrupalExtension implements ExtensionInterface {
   }
 
   /**
-   * {@inheritDoc}.
+   * {@inheritdoc}
    */
   public function getConfigKey() {
     return self::DRUPAL_ID;
   }
 
   /**
-   * {@inheritDoc}.
+   * {@inheritdoc}
    */
   public function initialize(ExtensionManager $extensionManager) {
   }
 
   /**
-   * {@inheritDoc}.
+   * {@inheritdoc}
    */
   public function load(ContainerBuilder $container, array $config) {
     $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/config'));
@@ -74,7 +74,7 @@ class DrupalExtension implements ExtensionInterface {
   }
 
   /**
-   * {@inheritDoc}.
+   * {@inheritdoc}
    */
   public function process(ContainerBuilder $container) {
     $this->processDriverPass($container);
@@ -84,7 +84,7 @@ class DrupalExtension implements ExtensionInterface {
   }
 
   /**
-   * {@inheritDoc}.
+   * {@inheritdoc}
    */
   public function configure(ArrayNodeDefinition $builder) {
     $builder->children()->scalarNode('default_driver')->defaultValue('blackbox')->info('Use "blackbox" to test remote site. See "api_driver" for easier integration.')->end()->scalarNode('api_driver')->defaultValue('drush')->info('Bootstraps drupal through "drupal8" or "drush".')->end()->scalarNode('drush_driver')->defaultValue('drush')->end()->arrayNode('region_map')->info("Targeting content in specific regions can be accomplished once those regions have been defined." . PHP_EOL
