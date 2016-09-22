@@ -616,9 +616,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *    alias referred to a user object, like in the above example, this
    *    function would actually return that object, freshly loaded from the db.
    */
-  public function resolveAlias($aliasfield) {
+  public function resolveAlias($alias) {
     // Ensure the alias does not have an attached field.
-    @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
+    @list($alias, $field) = explode('/', ltrim($alias, '@:'));
     if (empty($alias)) {
       throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
     }
@@ -651,13 +651,14 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     }
     return self::$aliases->getValue($alias, $field, $this);
   }
+
   /**
    * Deletes the field value for an aliased object.
-   *   *
+   *
    * @param string $aliasfield
    *   The alias/field combination to delete the value for.
    */
-  public function deleteAliasValue($aliasfield){
+  public function deleteAliasValue($aliasfield) {
     @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
     if (empty($alias)) {
       throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
@@ -667,6 +668,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     }
     return self::$aliases->deleteValue($alias, $field, $this);
   }
+
   /**
    * Create a user.
    *
@@ -828,7 +830,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *   An object with the following properties:
    *   - langcode: the langcode of the language to create.
    *
-   * @return object|FALSE
+   * @return object|false
    *   The created language, or FALSE if the language was already created.
    */
   public function languageCreate(\stdClass $language) {
@@ -874,7 +876,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * returns a loaded user from the database (with some values slightly
    * modified - like password overwritten with the original, non-hashed values).
    *
-   * @return object|NULL
+   * @return object|null
    *   The currently logged in user.
    */
   public function getLoggedInUser() {
@@ -1107,9 +1109,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     switch ($arrangement) {
       case 'row':
       case 'rows':
-          foreach ($table->getRowsHash() as $field => $value) {
+        foreach ($table->getRowsHash() as $field => $value) {
           $values[$field] = $value;
-          }
+        }
         break;
 
       case 'column':
