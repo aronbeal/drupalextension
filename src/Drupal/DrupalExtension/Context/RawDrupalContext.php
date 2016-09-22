@@ -651,7 +651,22 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
     }
     return self::$aliases->getValue($alias, $field, $this);
   }
-
+  /**
+   * Deletes the field value for an aliased object.
+   *   *
+   * @param string $aliasfield
+   *   The alias/field combination to delete the value for.
+   */
+  public function deleteAliasValue($aliasfield){
+    @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
+    if (empty($alias)) {
+      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+    }
+    if (empty($field)) {
+      throw new \Exception(sprintf("%s::%s line %s: No alias field was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+    }
+    return self::$aliases->deleteValue($alias, $field, $this);
+  }
   /**
    * Create a user.
    *
@@ -748,7 +763,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *   The altered node.
    */
   public function nodeAlter($node, $values) {
-    // Pay no mind to resolveAlias and convertAliasValues - they serve to
+    // Pay no mind to convertAliasValues - it serves to
     // dynamically translate strings to field values at runtime.  Assume static
     // values for purposes of simplicity.
     if (!isset($node->nid)) {

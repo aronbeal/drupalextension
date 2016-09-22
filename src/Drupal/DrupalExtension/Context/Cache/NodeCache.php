@@ -34,10 +34,21 @@ class NodeCache extends CacheBase {
   public function getValue($key, $field, Context &$context) {
     $object = $this->get($key, $context);
     if (!property_exists($object, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
     $w = entity_metadata_wrapper('node', $object);
     return $w->{$field}->value();
+  }
+
+  public function deleteValue($key, $field, Context &$context) {
+    $node = $this->get($key, $context);
+    if (!property_exists($node, $field)) {
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
+    }
+    $values = new \stdClass();
+    $values->{$field} = NULL;
+    print sprintf("Node: %s, Values: %s", print_r($node, TRUE), print_r($values, TRUE));
+    $context->getDriver()->nodeAlter($node, $values);
   }
 
   /**

@@ -237,6 +237,12 @@ abstract class CacheBase implements CacheInterface {
   }
 
   /**
+   * Deletes the field value for a given alias
+   */
+  public function deleteValue($key, $field, Context &$context) {
+    throw new \Exception(sprintf("%s::%s line %s: No implementation available.", get_class($this), __FUNCTION__, __LINE__));
+  }
+  /**
    * Magic method to display cache contents as a CLI-formatted string.
    *
    * @return string

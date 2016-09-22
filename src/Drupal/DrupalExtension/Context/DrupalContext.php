@@ -532,6 +532,14 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
         throw new \Exception(sprintf(':%s::%s: Alteration of %s types not yet supported: %s', get_class($this), __FUNCTION__, $type));
     }
   }
+  /**
+   * Retrieves the named object, and assigns new values to it.
+   *
+   * @Given I delete/unset the alias value :aliasfield
+   */
+  public function iDeleteTheAliasField($aliasfield) {
+    return $this->deleteAliasValue($aliasfield);
+  }
 
   /**
    * Pauses the scenario.

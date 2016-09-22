@@ -84,6 +84,16 @@ abstract class ReferentialCache extends CacheBase {
   }
 
   /**
+   * Deletes the value for a given field.
+   */
+  public function deleteValue($key, $field, Context &$context) {
+    $o = parent::get($key, $context);
+    if (!property_exists($this->cache_references, $o->cache)) {
+      throw new \Exception(sprintf("%s::%s: The cache '%s' is not referrable", __CLASS__, __FUNCTION__, $o->cache));
+    }
+    return $this->cache_references->{$o->cache}->deleteValue($o->value, $field, $context);
+  }
+  /**
    * {@InheritDoc}.
    */
   public function remove($key, Context &$context) {
