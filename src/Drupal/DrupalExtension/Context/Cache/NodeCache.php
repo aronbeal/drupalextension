@@ -47,7 +47,6 @@ class NodeCache extends CacheBase {
     }
     $values = new \stdClass();
     $values->{$field} = NULL;
-    print sprintf("Node: %s, Values: %s", print_r($node, TRUE), print_r($values, TRUE));
     $context->getDriver()->nodeAlter($node, $values);
   }
 
