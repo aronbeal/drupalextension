@@ -593,7 +593,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * Resolves an alias to a cached object.
    *
    * Returns an object that has been previously created and assigned a given
-   * alias (using the @ symbol in a feature table.).
+   * alias (using the @ symbol in a feature table.).  Note that you can
+   * pass aliasvalue strings to here (alias, followed by a / and a field name,
+   * and it will give you the original aliased object, NOT the value).
    *
    * Aliases are assigned using the @ symbol in table data.  When you assign
    * an alias, it is tracked within this codebase (externally to Drupal), so

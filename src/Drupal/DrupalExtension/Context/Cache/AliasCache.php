@@ -67,7 +67,7 @@ class AliasCache extends ReferentialCache {
    */
   public function getCache($alias) {
     if (!property_exists($this->cache, $alias)) {
-      throw new \Exception(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $key));
+      throw new \Exception(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $alias));
     }
     $o = $this->cache->{$alias};
     return $o->cache;

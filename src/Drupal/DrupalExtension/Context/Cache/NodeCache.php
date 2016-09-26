@@ -14,7 +14,6 @@ use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
  * fixed.
  */
 class NodeCache extends CacheBase {
-
   /**
    * {@InheritDoc}.
    *
@@ -28,6 +27,13 @@ class NodeCache extends CacheBase {
     return $context->getDriver()->getCore()->nodeLoad($key);
   }
 
+  /**
+   * @return string
+   *   The entity type stored by this cache.
+   */
+  public function getEntityType(){
+    return 'node';
+  }
   /**
    * Returns the value for a field from a given alias.
    */

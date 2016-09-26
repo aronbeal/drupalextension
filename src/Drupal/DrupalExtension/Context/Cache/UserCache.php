@@ -167,7 +167,13 @@ class UserCache extends CacheBase {
     $user->pass = $this->getMetaData($user->uid, 'pass');
     return $user;
   }
-
+  /**
+   * @return string
+   *   The entity type stored by this cache.
+   */
+  public function getEntityType(){
+    return 'user';
+  }
   /**
    * {@inheritdoc}
    */

@@ -243,6 +243,14 @@ abstract class CacheBase implements CacheInterface {
     throw new \Exception(sprintf("%s::%s line %s: No implementation available.", get_class($this), __FUNCTION__, __LINE__));
   }
   /**
+   * @return string
+   *   The entity type stored by this cache, or FALSE if the cache stores
+   *   something other than entities.
+   */
+  public function getEntityType(){
+    return FALSE;
+  }
+  /**
    * Magic method to display cache contents as a CLI-formatted string.
    *
    * @return string
