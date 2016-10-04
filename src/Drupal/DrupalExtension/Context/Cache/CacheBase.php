@@ -147,7 +147,7 @@ abstract class CacheBase implements CacheInterface {
    *   An array where the keys are property names on the cached object, and
    *   where values are the property values.
    */
-  public function find(array $values = array(), Context &$context) {
+  public function find(array $values, Context &$context) {
 
     throw new \Exception(sprintf("%s: does not implement the %s method", get_class($this), __FUNCTION__));
   }
@@ -237,19 +237,21 @@ abstract class CacheBase implements CacheInterface {
   }
 
   /**
-   * Deletes the field value for a given alias
+   * Deletes the field value for a given alias.
    */
   public function deleteValue($key, $field, Context &$context) {
     throw new \Exception(sprintf("%s::%s line %s: No implementation available.", get_class($this), __FUNCTION__, __LINE__));
   }
+
   /**
    * @return string
    *   The entity type stored by this cache, or FALSE if the cache stores
    *   something other than entities.
    */
-  public function getEntityType(){
+  public function getEntityType() {
     return FALSE;
   }
+
   /**
    * Magic method to display cache contents as a CLI-formatted string.
    *

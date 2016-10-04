@@ -20,13 +20,30 @@ class ContextCache extends CacheBase {
   }
 
   /**
+   * Returns a list of all contexts stored.
+   *
+   * @param Context $context
+   *   The calling context.
+   */
+  public function getAll(Context &$context) {
+    return $this->find(['all' => TRUE], $context);
+  }
+
+  /**
    * {@inheritdoc}
    *
    * This cache does not implement this interface method, and will throw an
    * exception if called.
    */
-  public function find(array $values = array(), Context &$context) {
+  public function find(array $values, Context &$context) {
     $allowed_keys = array(
+      'all' => function($v, $context_names) {
+        $results = array();
+        foreach ($context_names as $name) {
+          $results[] = $name;
+        }
+        return $results;
+      },
       'name' => function($v, $context_names) {
         $results = array();
         foreach ($context_names as $name) {

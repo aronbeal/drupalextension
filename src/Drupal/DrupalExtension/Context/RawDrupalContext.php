@@ -1049,7 +1049,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       // exception.
       $other_contexts = self::$contexts->find(array('class' => $context_name), $this);
       if (count($other_contexts) === 0) {
-        throw new \Exception(sprintf("%s::%s: %s context not available.  Available contexts: %s", get_class($this), __FUNCTION__, $context_name, print_r(self::$contexts, TRUE)));
+        throw new \Exception(sprintf("%s::%s: %s context not available.  Available contexts: %s", get_class($this), __FUNCTION__, $context_name, print_r(self::$contexts->getAll($this), TRUE)));
       }
       if (count($other_contexts) > 1) {
         throw new \Exception(sprintf("%s::%s: line %s: Multiple results for context lookup term %s; please be more specific.", get_class($this), __FUNCTION__, __LINE__, $context_name));

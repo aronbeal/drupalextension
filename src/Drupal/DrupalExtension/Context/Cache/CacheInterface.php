@@ -101,7 +101,7 @@ interface CacheInterface {
    * @return An item of the type managed by the implementing subclass, or NULL
    * if no such item was found.
    */
-  public function find(array $values = array(), Context &$context);
+  public function find(array $values, Context &$context);
 
   /**
    * Provides a count of items in this cache.
