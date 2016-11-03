@@ -692,19 +692,19 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       throw new \Exception(sprintf("%s::%s line %s: No alias field was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
     }
     $field_value = self::$aliases->getValue($alias, $field_name, $this);
+    if(!$is_multicolumn) {
+      return $field_value;
+    }
     if(empty($field_value)){
       return $field_value;
     }
-    if($is_multicolumn){
-      if(!is_array($field_value)){
-        return $field_value;
-      }
-      if(!array_key_exists($multicolumn_column, $field_value)){
-        throw new \Exception(sprintf("%s::%s line %s: The column %s does not exist as a valid key for the field.  Keys available: %s\n", get_called_class(), __FUNCTION__, __LINE__,$multicolumn_column, print_r(array_keys($field_value), TRUE)));
-      }
-      return $field_value[$multicolumn_column];
+    if(!is_array($field_value)){
+      return $field_value;
     }
-    return self::$aliases->getValue($alias, $field_name, $this);
+    if(!array_key_exists($multicolumn_column, $field_value)){
+      throw new \Exception(sprintf("%s::%s line %s: The column %s does not exist as a valid key for the field.  Keys available: %s\n", get_called_class(), __FUNCTION__, __LINE__,$multicolumn_column, print_r(array_keys($field_value), TRUE)));
+    }
+    return $field_value[$multicolumn_column];
   }
 
   /**
