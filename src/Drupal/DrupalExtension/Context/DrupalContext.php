@@ -582,6 +582,33 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   }
 
   /**
+   * Asserts the aliased field value to a provided value.
+   *
+   * Provides a way to be able to check a single value on an aliased entity.
+   *
+   * It retrieves the aliased value, which the first 8 lines of code are copied
+   * from resolveAliasValue(), but we need to handle field values, so we need to utilize
+   * entity metadata wrappers and cannot modify the function, so here we are.
+   *
+   * @param string $aliasfield
+   *   The aliased object name and field machine name separated by a forward
+   *   slash.
+   * @param string $v
+   *   The string value to compare with.
+   *
+   * @see DrupalContext::resolveAliasValue()
+   *
+   * @Given the aliased field value :aliasfield is (equal to ):v
+   * @Given aliased field value :aliasfield is :v
+   */
+  public function theAliasedValueIs($aliasfield, $v) {
+    // Code copied from DrupalContext::resolveAliasValue()
+    $field_value = $this->resolveAliasValue($aliasfield);
+    if($field_value !== $v){
+      throw new \Exception(sprintf("%s::%s line %s: Value mismatch.  Expected '%s', got '%s'\n", get_called_class(), __FUNCTION__, __LINE__, $v, $field_value));
+    }
+  }
+  /**
    * Retrieves the currently logged in user.
    *
    * Note that this relies on the stored cached value of the current user
