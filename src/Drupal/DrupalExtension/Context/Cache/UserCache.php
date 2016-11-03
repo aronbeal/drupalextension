@@ -182,6 +182,7 @@ class UserCache extends CacheBase {
     if (!property_exists($object, $field)) {
       throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
+    entity_get_controller('user')->resetCache(array($object->uid));
     $w = entity_metadata_wrapper('user', $object);
     return $w->{$field}->value();
   }
