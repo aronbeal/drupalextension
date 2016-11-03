@@ -11,7 +11,7 @@ use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
  *  with indexing.  Note: not all interface methods are implemented!  It
  *  is up to the subclass to fill in the blanks.
  */
-abstract class CacheBase implements CacheInterface, CacheInterface {
+abstract class CacheBase implements CacheInterface {
   // Stores actual copies of cached items.  Using stdclass to allow
   // "string" integer keys.
   protected $cache = NULL;
