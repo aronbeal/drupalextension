@@ -96,8 +96,7 @@ class UserCache extends CacheBase {
     }
     // See note on batch processing at
     // https://api.drupal.org/api/drupal/modules%21user%21user.module/function/user_cancel/7.x
-
-    if($total_processed > 0){
+    if ($total_processed > 0) {
       $context->getDriver()->processBatch();
     }
     $this->resetCache();
