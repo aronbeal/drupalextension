@@ -81,13 +81,15 @@ class UserCache extends CacheBase {
     }
     $uids = array_keys(get_object_vars($this->cache));
     foreach ($uids as $uid) {
+      if ($this->getCacheInstruction($uid, 'noclean')) {
+        continue;
+      }
       $user = new \stdClass();
       $user->uid = $uid;
       foreach ($this->getMetaData($user->uid) as $k => $v) {
         // Adds back items critical for deletion in some drivers.
         $user->{$k} = $v;
       }
-      // Print sprintf("%s::%s line %s: Deleting user %s", get_class($this), __FUNCTION__, __LINE__, print_r($user, TRUE));.
       $context->getDriver()->userDelete($user);
     }
     // See note on batch processing at
@@ -133,6 +135,28 @@ class UserCache extends CacheBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function get($key, Context &$context) {
+    if (!property_exists($this->cache, $key)) {
+      throw new \Exception(sprintf("%s::%s: No user result found for key %s", __CLASS__, __FUNCTION__, $key));
+    }
+    $user = $context->getDriver()->getCore()->userLoad($key);
+    $user->pass = $this->getMetaData($user->uid, 'pass');
+    return $user;
+  }
+
+  /**
+   * Returns entity type.
+   *
+   * @return string
+   *   The entity type stored by this cache.
+   */
+  public function getEntityType() {
+    return 'user';
+  }
+
+  /**
    * Adds metadata about a stored cache item.
    *
    * @param mixed $index
@@ -159,29 +183,12 @@ class UserCache extends CacheBase {
   /**
    * {@inheritdoc}
    */
-  public function get($key, Context &$context) {
-    if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No user result found for key %s", __CLASS__, __FUNCTION__, $key));
-    }
-    $user = $context->getDriver()->getCore()->userLoad($key);
-    $user->pass = $this->getMetaData($user->uid, 'pass');
-    return $user;
-  }
-  /**
-   * @return string
-   *   The entity type stored by this cache.
-   */
-  public function getEntityType(){
-    return 'user';
-  }
-  /**
-   * {@inheritdoc}
-   */
   public function getValue($key, $field, Context &$context) {
     $object = $this->get($key, $context);
     if (!property_exists($object, $field)) {
       throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
+    entity_get_controller('user')->resetCache(array($object->uid));
     $w = entity_metadata_wrapper('user', $object);
     return $w->{$field}->value();
   }

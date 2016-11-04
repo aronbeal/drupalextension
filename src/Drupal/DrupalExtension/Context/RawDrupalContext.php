@@ -64,7 +64,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * object in the other cache (and the cache name) rather than the object
    * itself.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $aliases = NULL;
   /**
@@ -74,28 +74,28 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * modification. Note that this has been converted to a static variable,
    * reflecting the fact that nodes can be created by multiple contexts.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $nodes = NULL;
 
   /**
    * Keep track of all users that are created so they can easily be removed.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $users = NULL;
 
   /**
    * Keep track of all terms that are created so they can easily be removed.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $terms = NULL;
 
   /**
    * Keep track of any roles that are created so they can easily be removed.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $roles = NULL;
 
@@ -106,14 +106,14 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * not require shared state, I can use them.  This *may* need to be in
    * static context, so as to be available to the AfterFeature hook.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $contexts = NULL;
 
   /**
    * Keep track of any languages that are created so they can easily be removed.
    *
-   * @var Drupal\DrupalExtension\Context\Cache\CacheInterface
+   * @var CacheInterface
    */
   protected static $languages = NULL;
 
@@ -206,7 +206,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
   /**
    * Instantiates all cache objects that will be used to store drupal ... stuff.
    *
-   * @param Behat\Behat\Hook\Scope\BeforeFeatureScope $scope
+   * @param BeforeFeatureScope $scope
    *   The behat surrounding scope.
    *
    * @BeforeFeature
@@ -220,7 +220,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *
    * Invalidation is done to ensure proper garbage collection.
    *
-   * @param Behat\Behat\Hook\Scope\AfterFeatureScope $scope
+   * @param AfterFeatureScope $scope
    *   The behat surrounding scope.
    *
    * @AfterFeature
@@ -478,6 +478,66 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
   }
 
   /**
+   * Returns an array of the components of a field entry.
+   *
+   * @param string $field
+   *   The string field entry from the feature file.
+   *
+   * @return array
+   *   An array with the following entries:
+   *   0: The field name component, or FALSE if not found.
+   *   1: The multicolumn value, or NULL if not found
+   *   2: TRUE if the field is complex, FALSE otherwise.
+   */
+  public static function parseMultiColumnField($field, $carry = '') {
+    // Normal field.
+    if (strpos($field, ':') === FALSE) {
+      return [$field, '', FALSE];
+    }
+    // Field name contains a ':' which is preceded by at least 1 character.
+    if (strpos($field, ':', 1) !== FALSE) {
+      return array_merge(explode(':', $field), [TRUE]);
+    }
+    // Field name starts with a ':'.
+    return [$carry, ltrim($field, ':'), TRUE];
+  }
+  /**
+   * Returns an array of the components of a column value entry.
+   *
+   * @param string $column
+   *   The string value entry.
+   *
+   * @return array
+   *   An array with the following entries:
+   *   0: The column key, or FALSE if not present.
+   *   1: The column value.
+   *   2: TRUE if the value is complex, FALSE otherwise.
+   */
+  public static function parseMultiColumnColumn($column, $is_field_multicolumn){
+    // Note, both the below (and the original) seem to not account for the
+    // case where there is a single key/value entry (and no separator), e.g.:
+    //| name     | mail         | field_post_address |
+    //| John Doe | john@doe.com | country: BE        |
+    // That could potentially swallow legitimate entries, however, so I guess
+    // there's nothing for it.
+    static $column_value_separator = ' - ';
+    if (strstr($column, $column_value_separator) !== FALSE) {
+      return [[FALSE, $column]];
+    }
+    $entries = array_map('trim', explode($column_value_separator, $column));
+    return array_map(function(&$item) use ($is_field_multicolumn){
+      // Colon separator for value indicates a key/value relationship.
+      if(strpos($item, ':', 1) === FALSE){
+        $item = [FALSE, $item];
+      }
+      if (!$is_field_multicolumn) {
+        $item = array_map('trim', explode(':', $item));
+      }
+    }, $entries);
+
+  }
+
+  /**
    * Parse multi-value fields.
    *
    * Possible formats:
@@ -490,72 +550,52 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *   An object containing the entity properties and fields as properties.
    */
   public function parseEntityFields($entity_type, \stdClass $entity) {
-    $multicolumn_field = '';
+    $field_name = '';
     $multicolumn_fields = array();
-
+    // Normalize the entries.
     foreach (clone $entity as $field => $field_value) {
       // Reset the multicolumn field if the field name does not contain a
       // column.
-      if (strpos($field, ':') === FALSE) {
-        $multicolumn_field = '';
+      list($field_name, $multicolumn_column, $is_field_multicolumn) = static::parseMultiColumnField($field, $field_name);
+      if (!$this->getDriver()->isField($entity_type, $field_name)) {
+        continue;
       }
-      // Start tracking a new multicolumn field if the field name contains a ':'
-      // which is preceded by at least 1 character.
-      elseif (strpos($field, ':', 1) !== FALSE) {
-        list($multicolumn_field, $multicolumn_column) = explode(':', $field);
-      }
-      // If a field name starts with a ':' but we are not yet tracking a
-      // multicolumn field we don't know to which field this belongs.
-      elseif (empty($multicolumn_field)) {
-        throw new \Exception(sprintf(':%s::%s: Field name missing for %s', get_class($this), __FUNCTION__, $field));
-      }
-      // Update the column name if the field name starts with a ':' and we are
-      // already tracking a multicolumn field.
-      else {
-        $multicolumn_column = substr($field, 1);
-      }
-
-      $is_multicolumn = $multicolumn_field && $multicolumn_column;
-      $field_name = $multicolumn_field ?: $field;
-      if ($this->getDriver()->isField($entity_type, $field_name)) {
-        // Split up multiple values in multi-value fields.
-        $values = array();
-        foreach (explode(',', $field_value) as $key => $value) {
-          $value = trim($value);
-          $columns = $value;
-          // Split up field columns if the ' - ' separator is present.
-          if (strstr($value, ' - ') !== FALSE) {
-            $columns = array();
-            foreach (explode(' - ', $value) as $column) {
-              // Check if it is an inline named column.
-              if (!$is_multicolumn && strpos($column, ': ', 1) !== FALSE) {
-                list ($key, $column) = explode(': ', $column);
-                $columns[$key] = $column;
-              }
-              else {
-                $columns[] = $column;
-              }
+      // Split up multiple values in multi-value fields.
+      $values = array();
+      foreach (array_map('trim', explode(',', $field_value)) as $key => $value) {
+        $columns = $value;
+        // Split up field columns if the ' - ' separator is present.
+        if (strstr($value, ' - ') !== FALSE) {
+          $columns = array();
+          foreach (explode(' - ', $value) as $column) {
+            // Check if it is an inline named column.
+            if (!$is_field_multicolumn && strpos($column, ': ', 1) !== FALSE) {
+              list ($key, $column) = explode(': ', $column);
+              $columns[$key] = $column;
+            }
+            else {
+              $columns[] = $column;
             }
           }
-          // Use the column name if we are tracking a multicolumn field.
-          if ($is_multicolumn) {
-            $multicolumn_fields[$multicolumn_field][$key][$multicolumn_column] = $columns;
-            unset($entity->$field);
-          }
-          else {
-            $values[] = $columns;
-          }
         }
-        // Replace regular fields inline in the entity after parsing.
-        if (!$is_multicolumn) {
-          $entity->$field_name = $values;
+        // Use the column name if we are tracking a multicolumn field.
+        if ($is_field_multicolumn) {
+          $multicolumn_fields[$field_name][$key][$multicolumn_column] = $columns;
+          unset($entity->{$field_name});
         }
+        else {
+          $values[] = $columns;
+        }
+      }
+      // Replace regular fields inline in the entity after parsing.
+      if (!$is_field_multicolumn) {
+        $entity->{$field_name} = $values;
       }
     }
 
     // Add the multicolumn fields to the entity.
     foreach ($multicolumn_fields as $field_name => $columns) {
-      $entity->$field_name = $columns;
+      $entity->{$field_name} = $columns;
     }
   }
 
@@ -619,10 +659,9 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *    function would actually return that object, freshly loaded from the db.
    */
   public function resolveAlias($alias) {
-    // Ensure the alias does not have an attached field.
     @list($alias, $field) = explode('/', ltrim($alias, '@:'));
     if (empty($alias)) {
-      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
+      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $alias));
     }
     return self::$aliases->get($alias, $this);
   }
@@ -645,13 +684,27 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    */
   public function resolveAliasValue($aliasfield) {
     @list($alias, $field) = explode('/', ltrim($aliasfield, '@:'));
+    list($field_name, $multicolumn_column, $is_multicolumn) = static::parseMultiColumnField($field);
     if (empty($alias)) {
       throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
     }
-    if (empty($field)) {
+    if (empty($field_name)) {
       throw new \Exception(sprintf("%s::%s line %s: No alias field was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $aliasfield));
     }
-    return self::$aliases->getValue($alias, $field, $this);
+    $field_value = self::$aliases->getValue($alias, $field_name, $this);
+    if(!$is_multicolumn) {
+      return $field_value;
+    }
+    if(empty($field_value)){
+      return $field_value;
+    }
+    if(!is_array($field_value)){
+      return $field_value;
+    }
+    if(!array_key_exists($multicolumn_column, $field_value)){
+      throw new \Exception(sprintf("%s::%s line %s: The column %s does not exist as a valid key for the field.  Keys available: %s\n", get_called_class(), __FUNCTION__, __LINE__,$multicolumn_column, print_r(array_keys($field_value), TRUE)));
+    }
+    return $field_value[$multicolumn_column];
   }
 
   /**

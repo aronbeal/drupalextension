@@ -14,38 +14,29 @@ use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
  * fixed.
  */
 class NodeCache extends CacheBase {
+
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
+   */
+  public function clean(Context &$context) {
+    if ($this->count() === 0) {
+      return TRUE;
+    }
+    $nids = array_keys(get_object_vars($this->cache));
+    foreach ($nids as $nid) {
+      if ($this->getCacheInstruction($nid, 'noclean')) {
+        continue;
+      }
+      $node = new \stdClass();
+      $node->nid = $nid;
+      $context->getDriver()->nodeDelete($node);
+    }
+    $this->resetCache();
+  }
+
+  /**
    *
-   * WARNING: leverages the D7 api to directly retrieve a result.  This
-   * eventually needs to be rewritten to use drivers.
    */
-  public function get($key, Context &$context) {
-    if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No node result found for key %s", __CLASS__, __FUNCTION__, $key));
-    }
-    return $context->getDriver()->getCore()->nodeLoad($key);
-  }
-
-  /**
-   * @return string
-   *   The entity type stored by this cache.
-   */
-  public function getEntityType(){
-    return 'node';
-  }
-  /**
-   * Returns the value for a field from a given alias.
-   */
-  public function getValue($key, $field, Context &$context) {
-    $object = $this->get($key, $context);
-    if (!property_exists($object, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
-    }
-    $w = entity_metadata_wrapper('node', $object);
-    return $w->{$field}->value();
-  }
-
   public function deleteValue($key, $field, Context &$context) {
     $node = $this->get($key, $context);
     if (!property_exists($node, $field)) {
@@ -67,18 +58,36 @@ class NodeCache extends CacheBase {
 
   /**
    * {@InheritDoc}.
+   *
+   * WARNING: leverages the D7 api to directly retrieve a result.  This
+   * eventually needs to be rewritten to use drivers.
    */
-  public function clean(Context &$context) {
-    if ($this->count() === 0) {
-      return TRUE;
+  public function get($key, Context &$context) {
+    if (!property_exists($this->cache, $key)) {
+      throw new \Exception(sprintf("%s::%s: No node result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
-    $nids = array_keys(get_object_vars($this->cache));
-    foreach ($nids as $nid) {
-      $node = new \stdClass();
-      $node->nid = $nid;
-      $context->getDriver()->nodeDelete($node);
+    return $context->getDriver()->getCore()->nodeLoad($key);
+  }
+
+  /**
+   * @return string
+   *   The entity type stored by this cache.
+   */
+  public function getEntityType() {
+    return 'node';
+  }
+
+  /**
+   * Returns the value for a field from a given alias.
+   */
+  public function getValue($key, $field, Context &$context) {
+    $object = $this->get($key, $context);
+    if (!property_exists($object, $field)) {
+      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
-    $this->resetCache();
+    entity_get_controller('node')->resetCache(array($object->nid));
+    $w = entity_metadata_wrapper('node', $object);
+    return $w->{$field}->value();
   }
 
 }
