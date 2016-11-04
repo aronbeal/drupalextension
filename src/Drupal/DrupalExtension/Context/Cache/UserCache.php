@@ -80,10 +80,12 @@ class UserCache extends CacheBase {
       return TRUE;
     }
     $uids = array_keys(get_object_vars($this->cache));
+    $total_processed = 0;
     foreach ($uids as $uid) {
       if ($this->getCacheInstruction($uid, 'noclean')) {
         continue;
       }
+      $total_processed++;
       $user = new \stdClass();
       $user->uid = $uid;
       foreach ($this->getMetaData($user->uid) as $k => $v) {
@@ -94,7 +96,10 @@ class UserCache extends CacheBase {
     }
     // See note on batch processing at
     // https://api.drupal.org/api/drupal/modules%21user%21user.module/function/user_cancel/7.x
-    $context->getDriver()->processBatch();
+
+    if($total_processed > 0){
+      $context->getDriver()->processBatch();
+    }
     $this->resetCache();
     return TRUE;
   }
