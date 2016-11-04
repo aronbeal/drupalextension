@@ -25,6 +25,8 @@ abstract class CacheBase implements CacheInterface {
   // option for any entries of that type.
   protected $indices = NULL;
 
+  protected $cacheInstructions = NULL;
+
   /**
    * Constructor.
    */
@@ -33,6 +35,7 @@ abstract class CacheBase implements CacheInterface {
     // Print "Constructing ".get_class($this) ."\n";.
     $this->cache   = new \stdClass();
     $this->indices = new \stdClass();
+    $this->cacheInstructions = new \stdClass();
     $this->resetCache();
   }
 
@@ -109,6 +112,28 @@ abstract class CacheBase implements CacheInterface {
   }
 
   /**
+   * Allows the addition of cache instructions for a particular cached value.
+   *
+   * A mechanism to provide additional information about
+   * cached objects that dictates cache behavior.  For instance, if we add
+   * the key 'noclean' to a given index, that item is ignored during post-
+   * scenario and post-feature cleanup.
+   *
+   * @param $index
+   * @param $key
+   * @param $value
+   */
+  public function addCacheInstruction($index, $key, $value = TRUE) {
+    if (!property_exists($this->cache, $index)) {
+      throw new \Exception(sprintf("%s::%s: No item with index %s exists in this cache", get_class($this), __FUNCTION__, $index));
+    }
+    if (!property_exists($this->cacheInstructions, $index)) {
+      $this->cacheInstructions->{$index} = [];
+    }
+    $this->cacheInstructions->{$index}[$key] = $value;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function addIndices() {
@@ -180,6 +205,31 @@ abstract class CacheBase implements CacheInterface {
   protected function getCacheIndicies() {
 
     return array_keys(get_object_vars($this->cache));
+  }
+
+  /**
+   * Retrieves metadata for a particular index.
+   *
+   * @param $index
+   *   The index to retrieve metadata for.
+   * @param $key
+   *   The key to lookup.
+   *
+   * @return mixed
+   *   The value stored for the metadata key $key, or NULL if no metadata
+   *   has been assigned for that index.
+   */
+  public function getCacheInstruction($index, $key) {
+    if (!property_exists($this->cache, $index)) {
+      return NULL;
+    }
+    if (!property_exists($this->cacheInstructions, $index)) {
+      return NULL;
+    }
+    if (!array_key_exists($key, $this->cacheInstructions->{$index})) {
+      return NULL;
+    }
+    return $this->cacheInstructions->{$index}[$key];
   }
 
   /**
