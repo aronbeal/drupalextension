@@ -581,7 +581,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
         // Use the column name if we are tracking a multicolumn field.
         if ($is_field_multicolumn) {
           $multicolumn_fields[$field_name][$key][$multicolumn_column] = $columns;
-          unset($entity->{$field_name});
+          unset($entity->{$field});
         }
         else {
           $values[] = $columns;
