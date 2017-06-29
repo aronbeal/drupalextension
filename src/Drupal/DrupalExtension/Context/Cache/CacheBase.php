@@ -180,6 +180,13 @@ abstract class CacheBase implements CacheInterface {
   /**
    * {@inheritdoc}
    */
+  public function exists($key, Context &$context){
+    return (isset($this->cache->{$key}));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function find(array $values, Context &$context) {
 
     throw new \Exception(sprintf("%s: does not implement the %s method", get_class($this), __FUNCTION__));

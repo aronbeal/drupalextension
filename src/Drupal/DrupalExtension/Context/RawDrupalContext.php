@@ -657,11 +657,14 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    *    Returns whatever the original cached object was.  If the
    *    alias referred to a user object, like in the above example, this
    *    function would actually return that object, freshly loaded from the db.
+   *
+   * @throws \DomainException
+   *   If no alias could be parsed from the passed argument.
    */
   public function resolveAlias($alias) {
-    @list($alias, $field) = explode('/', ltrim($alias, '@:'));
+    @list($alias, $field) = explode('/', ltrim($alias, AliasCache::ALIAS_VALUE_PREFIX));
     if (empty($alias)) {
-      throw new \Exception(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $alias));
+      throw new \DomainException(sprintf("%s::%s line %s: No alias was found in the passed argument %s", get_class($this), __FUNCTION__, __LINE__, $alias));
     }
     return self::$aliases->get($alias, $this);
   }
