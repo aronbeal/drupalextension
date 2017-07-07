@@ -2,7 +2,7 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
  * The base implementation for DrupalContext Caching.
@@ -53,13 +53,13 @@ interface CacheInterface {
    * that the test suite could not know about.  It also does not do
    * proper cleanup in the event of a fatal php exception or CLI interrupt.
    *
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The currently executing context.
    *
    * @throws \Exception
    *   If any kind of error occurred during purging.
    */
-  public function clean(Context &$context);
+  public function clean(RawDrupalContext &$context);
 
   /**
    * Provides a count of items in this cache.
@@ -76,23 +76,23 @@ interface CacheInterface {
    *   The unique index of the item to delete.
    * @param string $field
    *   The name?
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The context object calling this function.
    */
-  public function deleteValue($key, $field, Context &$context);
+  public function deleteValue($key, $field, RawDrupalContext &$context);
 
   /**
    * Returns whether or not the named key exists.
-
+   *
    * @param string $key
    *   The unique index of the item.
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The context object calling this function.
    *
    * @return bool
    *   TRUE if the item exists, FALSE otherwise.
    */
-  public function exists($key, Context &$context);
+  public function exists($key, RawDrupalContext &$context);
 
   /**
    * Finds an item in the cache that matches the described set of options.
@@ -104,7 +104,7 @@ interface CacheInterface {
    * @param array $values
    *   An array of key/value pairs describing how to create
    *   an item of the type managed by the cache.
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The context calling the function.  Used for
    *   version-specific loading.
    *
@@ -112,7 +112,7 @@ interface CacheInterface {
    *   An item of the type managed by the implementing subclass, or NULL
    *   if no such item was found.
    */
-  public function find(array $values, Context &$context);
+  public function find(array $values, RawDrupalContext &$context);
 
   /**
    * Retrieves the cached value, if it exists.
@@ -121,15 +121,15 @@ interface CacheInterface {
    *
    * @param string $key
    *   The key the item is stored under.   *.
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The context calling the function.  Used for version-specific loading.
    *
-   * @return (mixed)
-   *         Either the appropriate value for whatever type of
+   * @return mixed
+   *   Either the appropriate value for whatever type of
    *         cache is implementing this interface, or NULL if no
    *         such value is found.
    */
-  public function get($key, Context &$context);
+  public function get($key, RawDrupalContext &$context);
 
   /**
    * Returns the type of entity managed by this cache.
@@ -179,8 +179,18 @@ interface CacheInterface {
 
   /**
    * Returns the value for a field from a given alias.
+   *
+   * @param string $alias
+   *   The alias to retrieve.
+   * @param string $field
+   *   The field on the aliased object to retrieve.
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
+   *   The invoking context.
+   *
+   * @return mixed
+   *   Whatever getValue would have returned on the original object.
    */
-  public function getValue($key, $field, Context &$context);
+  public function getValue($alias, $field, RawDrupalContext &$context);
 
   /**
    * Removes the object identified by the key $key from the cache.
@@ -192,12 +202,13 @@ interface CacheInterface {
    * @param string $key
    *   The primary index by which the object is stored
    *                     in the cache.
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The context calling the function.  Used for version-specific cleanup.
    *
-   * @return object|NULL      The object removed, or NULL if no object
-   *                              was stored by that key in the cache.
+   * @return object|null
+   *   The object removed, or NULL if no object was stored by that key in
+   *   the cache.
    */
-  public function remove($key, Context &$context);
+  public function remove($key, RawDrupalContext &$context);
 
 }

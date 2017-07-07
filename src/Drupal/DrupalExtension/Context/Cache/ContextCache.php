@@ -2,7 +2,7 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
  * For storing contexts created using the @BeforeScenario hook.
@@ -22,10 +22,15 @@ class ContextCache extends CacheBase {
   /**
    * Returns a list of all contexts stored.
    *
-   * @param Context $context
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
    *   The calling context.
+   *
+   * @return mixed
+   *   Shortcut for $this->find(['all' => TRUE], $context);
+   *
+   * @throws \Exception
    */
-  public function getAll(Context &$context) {
+  public function getAll(RawDrupalContext &$context) {
     return $this->find(['all' => TRUE], $context);
   }
 
@@ -35,16 +40,16 @@ class ContextCache extends CacheBase {
    * This cache does not implement this interface method, and will throw an
    * exception if called.
    */
-  public function find(array $values, Context &$context) {
+  public function find(array $values, RawDrupalContext &$context) {
     $allowed_keys = array(
-      'all' => function($v, $context_names) {
+      'all' => function ($v, $context_names) {
         $results = array();
         foreach ($context_names as $name) {
           $results[] = $name;
         }
         return $results;
       },
-      'name' => function($v, $context_names) {
+      'name' => function ($v, $context_names) {
         $results = array();
         foreach ($context_names as $name) {
           if (stristr($name, $v) !== FALSE) {
@@ -53,7 +58,7 @@ class ContextCache extends CacheBase {
         }
         return $results;
       },
-      'class' => function($v, $context_names) {
+      'class' => function ($v, $context_names) {
         $results = array();
         foreach ($context_names as $name) {
           $short_name = explode('\\', $name);
@@ -80,7 +85,7 @@ class ContextCache extends CacheBase {
         $results[] = $filtering_function($values[$k], array_keys(get_object_vars($this->cache)));
       }
     }
-    $results = array_reduce($results, function($carry, $item) {
+    $results = array_reduce($results, function ($carry, $item) {
       if (is_null($carry)) {
         return $item;
       }

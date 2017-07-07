@@ -2,7 +2,7 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
  * Stores references to nodes created during drupal testing.
@@ -18,7 +18,7 @@ class NodeCache extends CacheBase {
   /**
    * {@inheritdoc}
    */
-  public function clean(Context &$context) {
+  public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
       return TRUE;
     }
@@ -35,9 +35,9 @@ class NodeCache extends CacheBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
-  public function deleteValue($key, $field, Context &$context) {
+  public function deleteValue($key, $field, RawDrupalContext &$context) {
     $node = $this->get($key, $context);
     if (!property_exists($node, $field)) {
       throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
@@ -48,7 +48,7 @@ class NodeCache extends CacheBase {
   }
 
   /**
-   *
+   * Pauses processing execution.  Used internally for debugging.
    */
   private function doBreak() {
     fwrite(STDOUT, "\033[s \033[93m[Breakpoint] Press any key to continue\033[0m");
@@ -57,12 +57,12 @@ class NodeCache extends CacheBase {
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    *
    * WARNING: leverages the D7 api to directly retrieve a result.  This
    * eventually needs to be rewritten to use drivers.
    */
-  public function get($key, Context &$context) {
+  public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
       throw new \Exception(sprintf("%s::%s: No node result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
@@ -70,6 +70,8 @@ class NodeCache extends CacheBase {
   }
 
   /**
+   * Returns the entity type this cache handles.
+   *
    * @return string
    *   The entity type stored by this cache.
    */
@@ -78,10 +80,10 @@ class NodeCache extends CacheBase {
   }
 
   /**
-   * Returns the value for a field from a given alias.
+   * {@inheritdoc}
    */
-  public function getValue($key, $field, Context &$context) {
-    $object = $this->get($key, $context);
+  public function getValue($alias, $field, RawDrupalContext &$context) {
+    $object = $this->get($alias, $context);
     if (!property_exists($object, $field)) {
       throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }

@@ -2,7 +2,7 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
  * For storing languages created during testing.
@@ -10,12 +10,12 @@ use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
 class LanguageCache extends CacheBase {
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    *
    * WARNING: leverages the D7 api to directly retrieve a result.  This
    * eventually needs to be rewritten to use drivers.
    */
-  public function get($key, Context &$context) {
+  public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
       throw new \Exception(sprintf("%s::%s: No language result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
@@ -27,9 +27,9 @@ class LanguageCache extends CacheBase {
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    */
-  public function clean(Context &$context) {
+  public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
       return TRUE;
     }

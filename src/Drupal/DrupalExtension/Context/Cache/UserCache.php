@@ -2,7 +2,7 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
  * Stores any users generated with api calls.
@@ -19,9 +19,9 @@ class UserCache extends CacheBase {
    * Metadata is added during the add method, and retrieved during the get
    * method.
    *
-   * @var null
+   * @var \stdClass
    */
-  private $metadata = NULL;
+  private $metadata;
 
   /**
    * Override constructor to add metadata object.
@@ -43,7 +43,7 @@ class UserCache extends CacheBase {
   public function add($index, $value = NULL) {
 
     if (empty($value)) {
-      throw new \Exception(sprintf("%s::%s: A user object must be passed to the add method for this cache.", get_class($this), __FUNCTION__));
+      throw new \RuntimeException(sprintf("%s::%s: A user object must be passed to the add method for this cache.", get_class($this), __FUNCTION__));
     }
     $metadata = array(
       'name' => $value->name,
@@ -64,7 +64,7 @@ class UserCache extends CacheBase {
    * @param array $metadata
    *   An array of key/value pairs to store for that index.
    */
-  private function addMetadata($index, $metadata = array()) {
+  private function addMetadata($index, array $metadata = array()) {
     if (empty($metadata)) {
       return;
     }
@@ -75,7 +75,7 @@ class UserCache extends CacheBase {
   /**
    * {@inheritdoc}
    */
-  public function clean(Context &$context) {
+  public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
       return TRUE;
     }
@@ -109,15 +109,15 @@ class UserCache extends CacheBase {
    * In order to avoid a db lookup, the find operation for the user cache
    * only stores values stored in an index.
    */
-  public function find(array $values, Context &$context) {
+  public function find(array $values, RawDrupalContext &$context) {
     $matches = array();
     $match = TRUE;
     foreach ($values as $k => $v) {
       if (!is_scalar($v)) {
-        throw new \Exception(sprintf("%s::%s line %s: This cache does not support searching for non-scalar values.", get_class($this), __FUNCTION__, __LINE__));
+        throw new \RuntimeException(sprintf("%s::%s line %s: This cache does not support searching for non-scalar values.", get_class($this), __FUNCTION__, __LINE__));
       }
       if (!isset($this->indices->{$k})) {
-        throw new \Exception(sprintf("%s::%s line %s: The content in this cache has not been indexed by the field %s.  Available indices: %s", get_class($this), __FUNCTION__, __LINE__, $k, array_keys(get_object_vars($this->indices))));
+        throw new \RuntimeException(sprintf("%s::%s line %s: The content in this cache has not been indexed by the field %s.  Available indices: %s", get_class($this), __FUNCTION__, __LINE__, $k, array_keys(get_object_vars($this->indices))));
       }
       $index_values = array_keys(get_object_vars($this->indices->{$k}));
       // For now, limit index searching solely to exact matches.
@@ -141,9 +141,9 @@ class UserCache extends CacheBase {
   /**
    * {@inheritdoc}
    */
-  public function get($key, Context &$context) {
+  public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No user result found for key %s", __CLASS__, __FUNCTION__, $key));
+      throw new \RuntimeException(sprintf("%s::%s: No user result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
     $user = $context->getDriver()->getCore()->userLoad($key);
     $user->pass = $this->getMetaData($user->uid, 'pass');
@@ -169,17 +169,24 @@ class UserCache extends CacheBase {
    * @param string $key
    *   The metadata key to retrieve.  Returns entire
    *   metadata object if key is null.
+   *
+   * @return mixed
+   *   The value of the indicated metadata key.
+   *
+   * @throws \RuntimeException
+   *   - If the passed user id is not known.
+   *   - if the passed metadata key was never set for this user.
    */
   private function getMetadata($index, $key = NULL) {
     $index = strval($index);
     if (!property_exists($this->metadata, $index)) {
-      throw new \Exception(sprintf("%s::%s: line %s: The user with id %s is unknown to this cache.", get_class($this), __FUNCTION__, __LINE__, $index));
+      throw new \RuntimeException(sprintf("%s::%s: line %s: The user with id %s is unknown to this cache.", get_class($this), __FUNCTION__, __LINE__, $index));
     }
     if (empty($key)) {
       return $this->metadata->{$index};
     }
     if (!property_exists($this->metadata->{$index}, $key)) {
-      throw new \Exception(sprintf("%s::%s: line %s: The metadata with key %s was never set for this user", get_class($this), __FUNCTION__, __LINE__, $key));
+      throw new \RuntimeException(sprintf("%s::%s: line %s: The metadata with key %s was never set for this user", get_class($this), __FUNCTION__, __LINE__, $key));
     }
     return $this->metadata->{$index}->{$key};
   }
@@ -187,10 +194,10 @@ class UserCache extends CacheBase {
   /**
    * {@inheritdoc}
    */
-  public function getValue($key, $field, Context &$context) {
-    $object = $this->get($key, $context);
+  public function getValue($alias, $field, RawDrupalContext &$context) {
+    $object = $this->get($alias, $context);
     if (!property_exists($object, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
+      throw new \RuntimeException(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
     entity_get_controller('user')->resetCache(array($object->uid));
     $w = entity_metadata_wrapper('user', $object);

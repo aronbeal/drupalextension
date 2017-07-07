@@ -28,7 +28,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   /**
    * Creates a user.
    *
-   * @param TableNode $table
+   * @param \Behat\Gherkin\Node\TableNode $table
    *   The field information for the new user. Data provided in the form:
    *   | name      | Example user     |
    *   | mail      | user@example.com |
@@ -44,7 +44,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *    objects not known until after creation can be populated into the fields
    *    of subsequent objects.
    *
-   * @return object $user
+   * @return object
    *   The created drupal user.
    *
    * @Given the user:
@@ -64,7 +64,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *
    * @param string $alias
    *   :alias: The alias you wish to assign to the new user.
-   * @param TableNode $table
+   * @param \Behat\Gherkin\Node\TableNode $table
    *   :table: The field information for the new user.
    *   Data provided in the form:
    *   | name      | Example user     |
@@ -73,7 +73,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *   This method accepts aliases and aliased values. See theUser for more
    *   information.
    *
-   * @return object $user
+   * @return object
    *   The created drupal user.
    *
    * @Given the user with alias :alias:
@@ -103,7 +103,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   /**
    * Creates a new user and logs them in.
    *
-   * @param TableNode $table
+   * @param \Behat\Gherkin\Node\TableNode $table
    *   A table of data that defines the new user. Data provided in the form:
    *   | name      | Example user     |
    *   | mail      | user@example.com |
@@ -168,7 +168,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *
    * @param string $role
    *   A comma-separated list of roles for the new user.
-   * @param TableNode $fields
+   * @param \Behat\Gherkin\Node\TableNode $fields
    *   A table of data that defines the new user.
    *   Data provided in the form:
    *   | field_user_name     | John  |
@@ -333,7 +333,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *
    * @param string $type
    *   The node (bundle) type to view.
-   * @param TableNode $nodesTable
+   * @param \Behat\Gherkin\Node\TableNode $nodesTable
    *   The field data defining the node we are to view, in a row-centric
    *   format.
    *   Data provided in the form:
@@ -362,7 +362,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *
    * @param string $type
    *   The node (bundle) type to view.
-   * @param TableNode $fields
+   * @param \Behat\Gherkin\Node\TableNode $fields
    *   The field data defining the node we are to view.
    *   Data provided in the form:
    *   | title     | My node        |
@@ -438,7 +438,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   /**
    * Creates multiple users.
    *
-   * @param TableNode $usersTable
+   * @param \Behat\Gherkin\Node\TableNode $usersTable
    *   The table listing users by row.
    *
    * @Given users:
@@ -460,7 +460,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param string $vocabulary
    *   The machine name of the vocabulary to add
    *   the terms to.
-   * @param TableNode $termsTable
+   * @param \Behat\Gherkin\Node\TableNode $termsTable
    *   The table listing terms by row.
    *
    * @Given :vocabulary terms:
@@ -480,7 +480,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
         'vocabulary_machine_name' => $vocabulary,
         'description'             => $this->getDriver()->getRandom()->name(255),
       );
-      $term                          = (object) $termsHash;
+      $term      = (object) $termsHash;
       if (!isset($term->name)) {
         throw new \Exception(sprintf("%s::%s line %s: Table data contained no value for 'name'", get_class($this), __FUNCTION__, __LINE__));
       }
@@ -491,7 +491,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   /**
    * Creates one or more languages.
    *
-   * @param TableNode $langcodesTable
+   * @param \Behat\Gherkin\Node\TableNode $langcodesTable
    *   The table listing languages by their ISO code.
    *
    * @Given the/these (following )languages are available:
@@ -519,7 +519,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   public function iSetTheValuesTo($alias, TableNode $table) {
     $o = $this->resolveAlias($alias);
     $values = self::convertTableNodeToArray($table);
-    switch (self::$aliases->getCache($alias)) {
+    switch (self::$aliases->applyToCache($alias)) {
       case 'nodes':
         $this->nodeAlter($o, $values);
         break;
@@ -587,8 +587,9 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * Provides a way to be able to check a single value on an aliased entity.
    *
    * It retrieves the aliased value, which the first 8 lines of code are copied
-   * from resolveAliasValue(), but we need to handle field values, so we need to utilize
-   * entity metadata wrappers and cannot modify the function, so here we are.
+   * from resolveAliasValue(), but we need to handle field values, so we need
+   * to utilize entity metadata wrappers and cannot modify the function, so
+   * here we are.
    *
    * @param string $aliasfield
    *   The aliased object name and field machine name separated by a forward
@@ -604,10 +605,11 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
   public function theAliasedValueIs($aliasfield, $v) {
     // Code copied from DrupalContext::resolveAliasValue()
     $field_value = $this->resolveAliasValue($aliasfield);
-    if($field_value !== $v){
+    if ($field_value !== $v) {
       throw new \Exception(sprintf("%s::%s line %s: Value mismatch.  Expected '%s', got '%s'\n", get_called_class(), __FUNCTION__, __LINE__, $v, $field_value));
     }
   }
+
   /**
    * Retrieves the currently logged in user.
    *

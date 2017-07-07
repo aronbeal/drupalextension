@@ -2,11 +2,39 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
+use Drupal\DrupalExtension\Context\RawDrupalContext;
+
 /**
  * A simple class to store globally unique aliases to specific items.
+ *
+ * The aliasing system works by establishing an alias to an object using the
+ * ALIAS_KEY_PREFIX.
+ * Once it is created in a scenario, subsequent operations can use that alias
+ * object (and its field values) by referring to it in their test suite
+ * with the ALIAS_VALUE_PREFIX defined herein.
+ *
+ * (Contrived) example: two articles with the same title.
+ *
+ * Given the article:
+ *  | title | My article   |
+ *  | @     | test_article |
+ * And the article:
+ *  | title | @:test_article/title |
  */
 class AliasCache extends ReferentialCache {
-  const ALIAS_KEY_PREFIX   = '@';
+
+  /**
+   * A prefix whose usage indicates this object should be aliased.
+   *
+   * @const string
+   */
+  const ALIAS_KEY_PREFIX = '@';
+
+  /**
+   * A prefix whose usage indicates this object should exist as an alias.
+   *
+   * @const string
+   */
   const ALIAS_VALUE_PREFIX = '@:';
 
   /**
@@ -21,13 +49,17 @@ class AliasCache extends ReferentialCache {
    *   An object containing keys=>values corresponding to field data for
    *   an object that is soon to be created for testing.
    *
-   * @return string|NULL
-   *         The string alias if one was found, or NULL if no alias key was
-   *         present.
+   * @return string|null
+   *   The string alias if one was found, or NULL if no alias key was
+   *     present.
+   *
+   * @throws \InvalidArgumentException
+   *   If the wrong argument type was passed.
+   * @throws \RuntimeException
    */
   public static function extractAliasKey(&$o) {
     if (!is_object($o)) {
-      throw new \Exception(sprintf("%s::%s: Wrong argument type (%s) passed.", __CLASS__, __FUNCTION__, gettype($o)));
+      throw new \InvalidArgumentException(sprintf("%s::%s: Wrong argument type (%s) passed.", __CLASS__, __FUNCTION__, gettype($o)));
     }
     // TODO: check for multiple aliases set on one object.
     $alias = NULL;
@@ -44,7 +76,7 @@ class AliasCache extends ReferentialCache {
       }
     }
     else {
-      throw new \Exception(sprintf("%s::%s: Invalid argument type: %s", __CLASS__, __FUNCTION__, gettype($o)));
+      throw new \RuntimeException(sprintf("%s::%s: Invalid argument type: %s", __CLASS__, __FUNCTION__, gettype($o)));
     }
     return $alias;
   }
@@ -61,13 +93,13 @@ class AliasCache extends ReferentialCache {
    * @return string
    *   The cache name where the object is stored.
    *
-   * @throws \Exception
+   * @throws \RuntimeException
    *   If the alias does not exist, or the cache where it indicates its data
    *   is stored does not exist.
    */
-  public function getCache($alias) {
+  public function applyToCache($alias) {
     if (!property_exists($this->cache, $alias)) {
-      throw new \Exception(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $alias));
+      throw new \RuntimeException(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $alias));
     }
     $o = $this->cache->{$alias};
     return $o->cache;
@@ -90,14 +122,19 @@ class AliasCache extends ReferentialCache {
    *   immediately prior to node creation.  It is important for outside
    *   callers that use aliases in their tables to invoke this function however,
    *   if they intend to circumvent functions like nodeCreate.
+   * @param \Drupal\DrupalExtension\Context\RawDrupalContext $context
+   *   The subclass of RawDrupalContext that is invoking this method.
+   *
+   * @throws \RuntimeException
+   * @throws \RuntimeException
    */
-  public function convertAliasValues(&$values, &$context) {
+  public function convertAliasValues(&$values, RawDrupalContext &$context) {
     // Translate dynamic values if present.
     if (empty($values)) {
-      throw new \Exception(sprintf('%s::%s: An empty argument was passed.', get_class($this), __FUNCTION__));
+      throw new \RuntimeException(sprintf('%s::%s: An empty argument was passed.', get_class($this), __FUNCTION__));
     }
     if (!is_object($values)) {
-      throw new \Exception(sprintf('%s::%s: Invalid argument type for function: %s', get_class($this), __FUNCTION__, gettype($values)));
+      throw new \RuntimeException(sprintf('%s::%s: Invalid argument type for function: %s', get_class($this), __FUNCTION__, gettype($values)));
     }
     foreach ($values as $field_name => $field_value) {
       if (!is_string($field_value)) {
@@ -127,22 +164,22 @@ class AliasCache extends ReferentialCache {
         $confirmed_alias_with_field = str_replace(self::ALIAS_VALUE_PREFIX, '', $confirmed_alias);
         $av_components = explode('/', $confirmed_alias_with_field);
         if (count($av_components) < 2) {
-          throw new \Exception(sprintf("%s::%s: Any alias passed as a value must have a field assigned to it.  The alias %s does not", get_class($this), __FUNCTION__, $confirmed_alias));
+          throw new \RuntimeException(sprintf("%s::%s: Any alias passed as a value must have a field assigned to it.  The alias %s does not", get_class($this), __FUNCTION__, $confirmed_alias));
         }
         list($actual_alias, $referenced_field_name) = $av_components;
         $o = $this->get($actual_alias, $context);
         if (empty($o)) {
-          throw new \Exception(sprintf('%s::%s: Attempt was made to dynamically reference the property of an item that was not yet created.', get_class($this), __FUNCTION__));
+          throw new \RuntimeException(sprintf('%s::%s: Attempt was made to dynamically reference the property of an item that was not yet created.', get_class($this), __FUNCTION__));
         }
         if (!property_exists($o, $referenced_field_name)) {
           $property_list = array_keys(get_object_vars($o));
           sort($property_list);
-          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
+          throw new \RuntimeException(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
         }
         $value = NULL;
         $entity_property_list = array_keys(get_object_vars($o));
         if (!in_array($referenced_field_name, $entity_property_list)) {
-          throw new \Exception(sprintf("%s::%s: The field %s was  not found on the retrieved cache object.  Available properties: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($entity_property_list, TRUE)));
+          throw new \RuntimeException(sprintf("%s::%s: The field %s was  not found on the retrieved cache object.  Available properties: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($entity_property_list, TRUE)));
         }
         $resolved_field_values[$i] = $o->{$referenced_field_name};
       }

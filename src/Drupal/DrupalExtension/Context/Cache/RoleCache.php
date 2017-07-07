@@ -2,31 +2,30 @@
 
 namespace Drupal\DrupalExtension\Context\Cache;
 
-use Drupal\DrupalExtension\Context\RawDrupalContext as Context;
+use Drupal\DrupalExtension\Context\RawDrupalContext;
 
 /**
- * A simple class to store cached copies of created Drupal items,
- *  with indexing.
+ * A simple class to store cached copies of created Drupal items, with indexing.
  */
 class RoleCache extends CacheBase {
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    *
    * WARNING: leverages the D7 api to directly retrieve a result.  This
    * eventually needs to be rewritten to use drivers.
    */
-  public function get($key, Context &$context) {
+  public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
       throw new \Exception(sprintf("%s::%s: No role result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
-    return $this->getDriver()->getCore()->roleLoad($key);
+    return $context->getDriver()->getCore()->roleLoad($key);
   }
 
   /**
-   * {@InheritDoc}.
+   * {@inheritdoc}
    */
-  public function clean(Context &$context) {
+  public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
       return TRUE;
     }
