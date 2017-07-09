@@ -1,4 +1,5 @@
 # Behat Drupal Extension (fork)
+## Auto-create-dependencies branch
 
 This fork of the [Behat Drupal Extension](https://github.com/jhedstrom/drupalextension) is constructed to add a more advanced caching capability to the original, and to allow for resources to be shared and contexts to interact within a Behat 3 environment (which no longer allows SubContexts).
 
