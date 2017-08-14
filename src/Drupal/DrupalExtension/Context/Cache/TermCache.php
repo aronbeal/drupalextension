@@ -35,7 +35,7 @@ class TermCache extends CacheBase {
         continue;
       }
       $term = new \stdClass();
-      $term->nid = $tid;
+      $term->tid = $tid;
       $context->getDriver()->termDelete($term);
     }
     $this->resetCache();
