@@ -40,7 +40,7 @@ class NodeCache extends CacheBase {
   public function deleteValue($key, $field, RawDrupalContext &$context) {
     $node = $this->get($key, $context);
     if (!property_exists($node, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
+      throw new \RuntimeException(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
     $values = new \stdClass();
     $values->{$field} = NULL;
@@ -64,7 +64,7 @@ class NodeCache extends CacheBase {
    */
   public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No node result found for key %s", __CLASS__, __FUNCTION__, $key));
+      throw new \RuntimeException(sprintf("%s::%s: No node result found for key %s", __CLASS__, __FUNCTION__, $key));
     }
     return $context->getDriver()->getCore()->nodeLoad($key);
   }
@@ -85,7 +85,7 @@ class NodeCache extends CacheBase {
   public function getValue($alias, $field, RawDrupalContext &$context) {
     $object = $this->get($alias, $context);
     if (!property_exists($object, $field)) {
-      throw new \Exception(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
+      throw new \RuntimeException(sprintf("%s::%s line %s: The property '%s' does not exist on this node.", __CLASS__, __FUNCTION__, __LINE__, $field));
     }
     entity_get_controller('node')->resetCache(array($object->nid));
     $w = entity_metadata_wrapper('node', $object);

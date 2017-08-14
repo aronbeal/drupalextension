@@ -59,7 +59,7 @@ class AliasCache extends ReferentialCache {
    */
   public static function extractAliasKey(&$o) {
     if (!is_object($o)) {
-      throw new \InvalidArgumentException(sprintf("%s::%s: Wrong argument type (%s) passed.", __CLASS__, __FUNCTION__, gettype($o)));
+      throw new \InvalidArgumentException(sprintf('%s::%s: Wrong argument type (%s) passed.', __CLASS__, __FUNCTION__, gettype($o)));
     }
     // TODO: check for multiple aliases set on one object.
     $alias = NULL;
@@ -76,7 +76,7 @@ class AliasCache extends ReferentialCache {
       }
     }
     else {
-      throw new \RuntimeException(sprintf("%s::%s: Invalid argument type: %s", __CLASS__, __FUNCTION__, gettype($o)));
+      throw new \RuntimeException(sprintf('%s::%s: Invalid argument type: %s', __CLASS__, __FUNCTION__, gettype($o)));
     }
     return $alias;
   }
@@ -99,7 +99,7 @@ class AliasCache extends ReferentialCache {
    */
   public function applyToCache($alias) {
     if (!property_exists($this->cache, $alias)) {
-      throw new \RuntimeException(sprintf("%s::%s: No result found for key %s", __CLASS__, __FUNCTION__, $alias));
+      throw new \RuntimeException(sprintf('%s::%s: No result found for key %s', __CLASS__, __FUNCTION__, $alias));
     }
     $o = $this->cache->{$alias};
     return $o->cache;
@@ -164,7 +164,7 @@ class AliasCache extends ReferentialCache {
         $confirmed_alias_with_field = str_replace(self::ALIAS_VALUE_PREFIX, '', $confirmed_alias);
         $av_components = explode('/', $confirmed_alias_with_field);
         if (count($av_components) < 2) {
-          throw new \RuntimeException(sprintf("%s::%s: Any alias passed as a value must have a field assigned to it.  The alias %s does not", get_class($this), __FUNCTION__, $confirmed_alias));
+          throw new \RuntimeException(sprintf('%s::%s: Any alias passed as a value must have a field assigned to it.  The alias %s does not', get_class($this), __FUNCTION__, $confirmed_alias));
         }
         list($actual_alias, $referenced_field_name) = $av_components;
         $o = $this->get($actual_alias, $context);
@@ -174,12 +174,12 @@ class AliasCache extends ReferentialCache {
         if (!property_exists($o, $referenced_field_name)) {
           $property_list = array_keys(get_object_vars($o));
           sort($property_list);
-          throw new \RuntimeException(sprintf("%s::%s: The field %s was  not found on the retrieved cache object: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
+          throw new \RuntimeException(sprintf('%s::%s: The field %s was  not found on the retrieved cache object: %s ', get_class($this), __FUNCTION__, $referenced_field_name, print_r($property_list, TRUE)));
         }
         $value = NULL;
         $entity_property_list = array_keys(get_object_vars($o));
         if (!in_array($referenced_field_name, $entity_property_list)) {
-          throw new \RuntimeException(sprintf("%s::%s: The field %s was  not found on the retrieved cache object.  Available properties: %s ", get_class($this), __FUNCTION__, $referenced_field_name, print_r($entity_property_list, TRUE)));
+          throw new \RuntimeException(sprintf('%s::%s: The field %s was  not found on the retrieved cache object.  Available properties: %s ', get_class($this), __FUNCTION__, $referenced_field_name, print_r($entity_property_list, TRUE)));
         }
         $resolved_field_values[$i] = $o->{$referenced_field_name};
       }

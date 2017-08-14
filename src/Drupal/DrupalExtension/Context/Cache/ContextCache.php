@@ -16,7 +16,7 @@ class ContextCache extends CacheBase {
    * exception if called.
    */
   public function addIndices() {
-    throw new \Exception(get_class($this) . '::' . ": does not implement the " . __FUNCTION__ . " method.");
+    throw new \Exception(get_class($this) . '::' . ': does not implement the ' . __FUNCTION__ . ' method.');
   }
 
   /**
@@ -72,11 +72,11 @@ class ContextCache extends CacheBase {
     );
     foreach ($values as $k => $v) {
       if (!is_scalar($v)) {
-        throw new \Exception(sprintf("%s::%s: Does not yet support non-scalar finding", get_class($this), __FUNCTION__));
+        throw new \Exception(sprintf('%s::%s: Does not yet support non-scalar finding', get_class($this), __FUNCTION__));
       }
     }
     if (count(array_intersect(array_keys($allowed_keys), array_keys($values))) === 0) {
-      throw new \Exception(sprintf("%s::%s: The context cache does not support one or more of the passed keys.", get_class($this), __FUNCTION__));
+      throw new \Exception(sprintf('%s::%s: The context cache does not support one or more of the passed keys.', get_class($this), __FUNCTION__));
     }
     $results = array();
     foreach ($allowed_keys as $k => $filtering_function) {

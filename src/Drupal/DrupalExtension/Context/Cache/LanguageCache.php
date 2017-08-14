@@ -17,11 +17,11 @@ class LanguageCache extends CacheBase {
    */
   public function get($key, RawDrupalContext &$context) {
     if (!property_exists($this->cache, $key)) {
-      throw new \Exception(sprintf("%s::%s: No language result found for key %s", __CLASS__, __FUNCTION__, $key));
+      throw new \RuntimeException(sprintf('%s::%s: No language result found for key %s', __CLASS__, __FUNCTION__, $key));
     }
     $languages = language_list();
     if (!isset($languages[$key])) {
-      throw new \Exception(sprintf("%s::%s: No result found for alias %s.  Language list: %s", __CLASS__, __FUNCTION__, $key, print_r(array_keys($languages))));
+      throw new \RuntimeException(sprintf('%s::%s: No result found for alias %s.  Language list: %s', __CLASS__, __FUNCTION__, $key, print_r(array_keys($languages), TRUE)));
     }
     return language_list($key);
   }
@@ -31,12 +31,16 @@ class LanguageCache extends CacheBase {
    */
   public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
-      return TRUE;
+      return;
     }
-    foreach ($this->cache as $term) {
-      $context->getDriver()->languageDelete($term);
+    $languages = array_keys(get_object_vars($this->cache));
+    foreach ($languages as $language) {
+      if ($this->getCacheInstruction($language, 'noclean')) {
+        continue;
+      }
+      $context->getDriver()->languageDelete($language);
     }
-    return $this->resetCache();
+    $this->resetCache();
   }
 
 }

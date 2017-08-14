@@ -98,7 +98,7 @@ abstract class CacheBase implements CacheInterface {
     }
     if (empty($value)) {
       if (!is_scalar($index)) {
-        throw new \InvalidArgumentException(sprintf("%s::%s line %s: cannot add a non-scalar as an index", get_class($this), __FUNCTION__, __LINE__));
+        throw new \InvalidArgumentException(sprintf('%s::%s line %s: cannot add a non-scalar as an index', get_class($this), __FUNCTION__, __LINE__));
       }
       $index = strval($index);
       // Stored value is a primary key.
@@ -106,7 +106,7 @@ abstract class CacheBase implements CacheInterface {
     }
     try {
       if (property_exists($this->cache, $index)) {
-        throw new \RuntimeException(sprintf("%s::%s: An item with the index %s already exists in this cache", get_class($this), __FUNCTION__, $index));
+        throw new \RuntimeException(sprintf('%s::%s: An item with the index %s already exists in this cache', get_class($this), __FUNCTION__, $index));
       }
     }
     catch (\RuntimeException $e) {
@@ -157,7 +157,7 @@ abstract class CacheBase implements CacheInterface {
    */
   public function addCacheInstruction($index, $key, $value = TRUE) {
     if (!property_exists($this->cache, $index)) {
-      throw new \RuntimeException(sprintf("%s::%s: No item with index %s exists in this cache", get_class($this), __FUNCTION__, $index));
+      throw new \RuntimeException(sprintf('%s::%s: No item with index %s exists in this cache', get_class($this), __FUNCTION__, $index));
     }
     if (!property_exists($this->cacheInstructions, $index)) {
       $this->cacheInstructions->{$index} = [];
@@ -175,7 +175,7 @@ abstract class CacheBase implements CacheInterface {
 
     $named_indices = func_get_args();
     if (empty($named_indices)) {
-      throw new \RuntimeException(sprintf("%s:: No arguments passed to %s function", get_class($this), __FUNCTION__));
+      throw new \RuntimeException(sprintf('%s:: No arguments passed to %s function', get_class($this), __FUNCTION__));
     }
     foreach ($named_indices as $named_index) {
       if (!property_exists($this->indices, $named_index)) {
@@ -209,7 +209,7 @@ abstract class CacheBase implements CacheInterface {
    * {@inheritdoc}
    */
   public function deleteValue($key, $field, RawDrupalContext &$context) {
-    throw new \RuntimeException(sprintf("%s::%s line %s: No implementation available.", get_class($this), __FUNCTION__, __LINE__));
+    throw new \RuntimeException(sprintf('%s::%s line %s: No implementation available.', get_class($this), __FUNCTION__, __LINE__));
   }
 
   /**
@@ -224,7 +224,7 @@ abstract class CacheBase implements CacheInterface {
    */
   public function find(array $values, RawDrupalContext &$context) {
 
-    throw new \RuntimeException(sprintf("%s: does not implement the %s method", get_class($this), __FUNCTION__));
+    throw new \RuntimeException(sprintf('%s: does not implement the %s method', get_class($this), __FUNCTION__));
   }
 
   /**
@@ -233,7 +233,7 @@ abstract class CacheBase implements CacheInterface {
   public function get($key, RawDrupalContext &$context) {
 
     if (!property_exists($this->cache, $key)) {
-      throw new \RuntimeException(sprintf("%s::%s: No result found for key %s.", get_class($this), __FUNCTION__, $key));
+      throw new \RuntimeException(sprintf('%s::%s: No result found for key %s.', get_class($this), __FUNCTION__, $key));
     }
     return $this->cache->{$key};
   }
@@ -289,7 +289,7 @@ abstract class CacheBase implements CacheInterface {
   public function getIndex($index_name, $index_key) {
 
     if (!property_exists($this->indices, $index_name)) {
-      throw new \RuntimeException(sprintf("%s::%s: The index %s does not exist in this cache! Cache state: %", get_class($this), __FUNCTION__, $index_name, $this));
+      throw new \RuntimeException(sprintf('%s::%s: The index %s does not exist in this cache! Cache state: %s', get_class($this), __FUNCTION__, $index_name, $this));
     }
     if (!property_exists($this->indices->{$index_name}, $index_key)) {
       return array();
@@ -316,8 +316,7 @@ abstract class CacheBase implements CacheInterface {
     if (!property_exists($object, $field)) {
       throw new \RuntimeException(sprintf("%s::%s line %s: The property '%s' does not exist on this object.", get_class($this), __FUNCTION__, __LINE__, $field));
     }
-    $field_value = $object->{$field};
-    return $field_value;
+    return $object->{$field};
   }
 
   /**
@@ -327,8 +326,7 @@ abstract class CacheBase implements CacheInterface {
    * an exception, and should be overridden by subclasses.
    */
   public function remove($key, RawDrupalContext &$context) {
-
-    throw new \RuntimeException(sprintf("%s:: does not implement the %s method %", get_class($this), __FUNCTION__));
+    throw new \RuntimeException(sprintf('Class %s does not implement the method %s', get_class($this), __METHOD__));
   }
 
   /**
