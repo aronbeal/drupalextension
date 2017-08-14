@@ -20,7 +20,7 @@ class NodeCache extends CacheBase {
    */
   public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
-      return TRUE;
+      return;
     }
     $nids = array_keys(get_object_vars($this->cache));
     foreach ($nids as $nid) {

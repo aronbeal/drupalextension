@@ -27,14 +27,18 @@ class TermCache extends CacheBase {
    */
   public function clean(RawDrupalContext &$context) {
     if ($this->count() === 0) {
-      return TRUE;
+      return;
     }
-    foreach ($this->cache as $tid) {
+    $tids = array_keys(get_object_vars($this->cache));
+    foreach ($tids as $tid) {
+      if ($this->getCacheInstruction($tid, 'noclean')) {
+        continue;
+      }
       $term = new \stdClass();
-      $term->tid = $tid;
-      $context->getDriver()->termDelete($term);
+      $term->nid = $tid;
+      $context->getDriver()->nodeDelete($term);
     }
-    return $this->resetCache();
+    $this->resetCache();
   }
 
 }

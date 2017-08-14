@@ -225,15 +225,18 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param string $rowText
    *   Some text within a table row that also contains the link.
    *
+   * @throws \RuntimeException
+   *   If the assertion fails.
+   *
    * @Then I should see (the text ):text in the :rowText row
    */
   public function assertTextInTableRow($text, $rowText) {
     $row = $this->getTableRow($this->getSession()->getPage(), $rowText);
-    if (empty($row)) {
-      throw new \Exception(sprintf("Couldn't find the row with text \"%s\".", $rowText));
+    if (NULL === $row) {
+      throw new \RuntimeException(sprintf("Couldn't find the row with text \"%s\".", $rowText));
     }
     if (strpos($row->getText(), $text) === FALSE) {
-      throw new \Exception(sprintf('Found a row containing "%s", but it did not contain the text "%s".', $rowText, $text));
+      throw new \RuntimeException(sprintf('Found a row containing "%s", but it did not contain the text "%s".', $rowText, $text));
     }
   }
 
@@ -248,6 +251,9 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param string $rowText
    *   Some text within a table row that also contains the link.
    *
+   * @throws \RuntimeException
+   *   If the assertion fails.
+   *
    * @Given I click :link in the :rowText row
    *
    * @Then I (should )see the :link in the :rowText row
@@ -259,7 +265,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
       $link_element->click();
       return;
     }
-    throw new \Exception(sprintf('Found a row containing "%s", but no "%s" link on the page %s', $rowText, $link, $this->getSession()->getCurrentUrl()));
+    throw new \RuntimeException(sprintf('Found a row containing "%s", but no "%s" link on the page %s', $rowText, $link, $this->getSession()->getCurrentUrl()));
   }
 
   /**
@@ -310,11 +316,14 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param string $title
    *   The title of the newly created node.
    *
+   * @throws \RuntimeException
+   *   If there is no user currently logged in.
+   *
    * @Given I am viewing my :type (content )with the title :title
    */
   public function createMyNode($type, $title) {
     if (!$this->loggedIn()) {
-      throw new \Exception(sprintf('There is no current logged in user to create a node for.'));
+      throw new \RuntimeException(sprintf('There is no current logged in user to create a node for.'));
     }
 
     $values = array(
@@ -394,11 +403,14 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *   The node type the currently logged in user is expected
    *   to be able to edit.
    *
+   * @throws \RuntimeException
+   *   If there is no user logged in.
+   *
    * @Then I should be able to edit a/an :type( content)
    */
   public function assertEditNodeOfType($type) {
     if (!$this->loggedIn()) {
-      throw new \Exception(sprintf("%s::%s line %s: Cannot test node edit assertions without a preceding login step.", get_class($this), __FUNCTION__, __LINE__));
+      throw new \RuntimeException(sprintf("%s::%s line %s: Cannot test node edit assertions without a preceding login step.", get_class($this), __FUNCTION__, __LINE__));
     }
     $saved = $this->createDefaultNode(array('type' => $type));
 
