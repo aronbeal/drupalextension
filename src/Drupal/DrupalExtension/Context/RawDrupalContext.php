@@ -689,7 +689,6 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
    * @throws \RuntimeException
    */
   public function resolveAlias($alias) {
-    @list($alias, $field) = explode('/', ltrim($alias, AliasCache::ALIAS_VALUE_PREFIX));
     if (empty($alias)) {
       throw new \DomainException(sprintf('%s::%s line %s: No alias was found in the passed argument %s', get_class($this), __FUNCTION__, __LINE__, $alias));
     }
