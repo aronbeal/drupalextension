@@ -614,7 +614,7 @@ class RawDrupalContext extends RawMinkContext implements DrupalAwareInterface {
       // Replace regular fields inline in the entity after parsing.
       if (!$is_field_multicolumn) {
         $entity->{$field_name} = $values;
-        // Don't specify any value if the step author has left it blank.
+        // Specify empty value if the step author has left it blank.
         if ($field_value === '') {
           $entity->{$field_name} = [];
         }
