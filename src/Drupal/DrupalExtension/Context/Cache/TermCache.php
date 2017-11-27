@@ -30,6 +30,8 @@ class TermCache extends CacheBase {
       return;
     }
     $tids = array_keys(get_object_vars($this->cache));
+    // Delete in reverse order of creation.
+    rsort($tids);
     foreach ($tids as $tid) {
       if ($this->getCacheInstruction($tid, 'noclean')) {
         continue;

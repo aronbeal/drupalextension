@@ -23,6 +23,8 @@ class NodeCache extends CacheBase {
       return;
     }
     $nids = array_keys(get_object_vars($this->cache));
+    // Delete in reverse order of creation.
+    rsort($nids);
     foreach ($nids as $nid) {
       if ($this->getCacheInstruction($nid, 'noclean')) {
         continue;

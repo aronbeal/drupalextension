@@ -80,6 +80,8 @@ class UserCache extends CacheBase {
       return TRUE;
     }
     $uids = array_keys(get_object_vars($this->cache));
+    // Delete in reverse order of creation.
+    rsort($uids);
     $total_processed = 0;
     foreach ($uids as $uid) {
       if ($this->getCacheInstruction($uid, 'noclean')) {
