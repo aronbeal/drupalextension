@@ -475,6 +475,9 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param \Behat\Gherkin\Node\TableNode $termsTable
    *   The table listing terms by row.
    *
+   * @throws \RuntimeException
+   *   If the table data contained no value for the key 'name'.
+   *
    * @Given :vocabulary terms:
    *
    * Provide term data in the following format:
@@ -494,7 +497,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
       );
       $term      = (object) $termsHash;
       if (!isset($term->name)) {
-        throw new \Exception(sprintf("%s::%s line %s: Table data contained no value for 'name'", get_class($this), __FUNCTION__, __LINE__));
+        throw new \RuntimeException(sprintf("%s::%s line %s: Table data contained no value for 'name'", get_class($this), __FUNCTION__, __LINE__));
       }
       $this->termCreate($term);
     }
@@ -541,7 +544,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
         break;
 
       default:
-        throw new \Exception(sprintf(':%s::%s: Alteration of %s types not yet supported: %s', get_class($this), __FUNCTION__, $type));
+        throw new \RuntimeException(sprintf(':%s::%s: Alteration of %s types not yet supported', get_class($this), __FUNCTION__, $o->type));
     }
   }
 
@@ -609,6 +612,9 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    * @param string $v
    *   The string value to compare with.
    *
+   * @throws \RuntimeException
+   *   On assertion failure.
+   *
    * @see DrupalContext::resolveAliasValue()
    *
    * @Given the aliased field value :aliasfield is (equal to ):v
@@ -618,7 +624,7 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
     // Code copied from DrupalContext::resolveAliasValue()
     $field_value = $this->resolveAliasValue($aliasfield);
     if ($field_value !== $v) {
-      throw new \Exception(sprintf("%s::%s line %s: Value mismatch.  Expected '%s', got '%s'\n", get_called_class(), __FUNCTION__, __LINE__, $v, $field_value));
+      throw new \RuntimeException(sprintf("%s::%s line %s: Value mismatch.  Expected '%s', got '%s'\n", get_called_class(), __FUNCTION__, __LINE__, $v, $field_value));
     }
   }
 
@@ -656,13 +662,16 @@ final class DrupalContext extends RawDrupalContext implements TranslatableContex
    *   (such types are collapsed by default for brevity. A value of 'all' in
    *   this field will expend the whole object).
    *
+   * @throws \RuntimeException
+   *   If no value was present for the given alias.
+   *
    * @Given /I debug the (?:\w+) (?:named )?"([^"]+)"$/
    * @Given /I debug the (?:\w+) (?:named )?"([^"]+)" and expand the values? of "([^"]+)"/
    */
   public function whenIdebugTheObjectNamed($alias, $fields = NULL) {
     $object = $this->resolveAlias($alias);
     if (empty($object)) {
-      throw new \Exception(sprintf("%s::%s: No value was found for the alias %s", get_class($this), __FUNCTION__, $alias));
+      throw new \RuntimeException(sprintf("%s::%s: No value was found for the alias %s", get_class($this), __FUNCTION__, $alias));
     }
     $expand_fields = ($fields === NULL) ? array() : array_map('trim', explode(',', $fields));
     fwrite(STDOUT, $this->stringifyObject($object, array('label' => $alias, 'expand fields' => $expand_fields)));

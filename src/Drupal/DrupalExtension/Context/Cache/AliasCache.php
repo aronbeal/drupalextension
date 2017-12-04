@@ -82,6 +82,14 @@ class AliasCache extends ReferentialCache {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  protected function apply($key, RawDrupalContext &$context, callable $fn) {
+    $key = ltrim($key, self::ALIAS_VALUE_PREFIX);
+    return parent::apply($key, $context, $fn);
+  }
+
+  /**
    * Returns the cache name where the object is stored.
    *
    * Should only ever be called by RawDrupalContext.  TODO: figure out an
@@ -98,6 +106,7 @@ class AliasCache extends ReferentialCache {
    *   is stored does not exist.
    */
   public function applyToCache($alias) {
+    $alias = ltrim($alias, self::ALIAS_VALUE_PREFIX);
     if (!property_exists($this->cache, $alias)) {
       throw new \RuntimeException(sprintf('%s::%s: No result found for key %s', __CLASS__, __FUNCTION__, $alias));
     }
