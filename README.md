@@ -1,4 +1,4 @@
-**EDIT FROM REPO MAINTAINER**: This project is not being maintained, and should be forked if you need its functionality.
+**EDIT FROM REPO MAINTAINER**: This project is not being maintained, and should be forked if you need its functionality.  It would probably be better to just use [Behat Drupal Extension](https://github.com/jhedstrom/drupalextension) directly at this point, as it has deviated significantly from this by now.
 
 # Behat Drupal Extension (fork)
 
